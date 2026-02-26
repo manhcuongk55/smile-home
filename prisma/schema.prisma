@@ -1,0 +1,144 @@
+// Smile Home — Core Property Operation System
+// Prisma Schema — SQLite for rapid development
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Property {
+  id        String     @id @default(cuid())
+  name      String
+  address   String
+  type      String     @default("RESIDENTIAL") // RESIDENTIAL, COMMERCIAL, MIXED
+  tenantId  String     @default("default")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  buildings Building[]
+}
+
+model Building {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name       String
+  floors     Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  rooms      Room[]
+}
+
+model Room {
+  id         String   @id @default(cuid())
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  number     String
+  type       String   @default("STUDIO") // STUDIO, ONE_BED, TWO_BED, THREE_BED, PENTHOUSE, COMMERCIAL
+  status     String   @default("VACANT") // VACANT, OCCUPIED, MAINTENANCE, RESERVED
+  price      Float    @default(0)
+  area       Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  contracts          Contract[]
+  interactions       Interaction[]
+  maintenanceTickets MaintenanceTicket[]
+}
+
+model Person {
+  id         String   @id @default(cuid())
+  name       String
+  email      String?
+  phone      String?
+  role       String   @default("LEAD") // TENANT, LEAD, OWNER, INVESTOR, STAFF
+  leadStatus String?  // NEW, CONTACTED, VIEWING_SCHEDULED, NEGOTIATING, CONVERTED, LOST
+  notes      String?
+  tenantId   String   @default("default")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  contracts          Contract[]
+  interactions       Interaction[]
+  maintenanceTickets MaintenanceTicket[]
+}
+
+model Interaction {
+  id         String   @id @default(cuid())
+  personId   String
+  person     Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  roomId     String?
+  room       Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  contractId String?
+  contract   Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  channel    String   @default("PHONE") // PHONE, EMAIL, CHAT, WALK_IN, SMS, LINE
+  direction  String   @default("INBOUND") // INBOUND, OUTBOUND, INTERNAL
+  subject    String
+  content    String
+  tags       String   @default("") // comma-separated for SQLite
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Contract {
+  id          String   @id @default(cuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  personId    String
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  type        String   @default("RENTAL") // RENTAL, SALE, MANAGEMENT
+  status      String   @default("DRAFT") // DRAFT, ACTIVE, EXPIRED, TERMINATED
+  startDate   DateTime
+  endDate     DateTime
+  monthlyRent Float    @default(0)
+  deposit     Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  invoices     Invoice[]
+  interactions Interaction[]
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  contractId    String
+  contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  invoiceNumber String   @unique
+  status        String   @default("PENDING") // PENDING, PAID, OVERDUE, CANCELLED
+  amount        Float
+  dueDate       DateTime
+  issuedDate    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  receipts Receipt[]
+}
+
+model Receipt {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Float
+  method    String   @default("TRANSFER") // CASH, TRANSFER, CREDIT_CARD, CHECK
+  paidDate  DateTime @default(now())
+  reference String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MaintenanceTicket {
+  id           String   @id @default(cuid())
+  roomId       String
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  reportedById String
+  reportedBy   Person   @relation(fields: [reportedById], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  priority     String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status       String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
