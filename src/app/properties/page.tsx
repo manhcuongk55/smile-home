@@ -56,11 +56,13 @@ export default function PropertiesPage() {
     }
 
     function getTotalRooms(prop: Property): number {
-        return prop.buildings.reduce((sum, b) => sum + b.rooms.length, 0);
+        const uniqueBuildings = Array.from(new Map(prop.buildings.map(b => [b.id, b])).values());
+        return uniqueBuildings.reduce((sum, b) => sum + b.rooms.length, 0);
     }
 
     function getOccupiedRooms(prop: Property): number {
-        return prop.buildings.reduce((sum, b) => sum + b.rooms.filter(r => r.status === 'OCCUPIED').length, 0);
+        const uniqueBuildings = Array.from(new Map(prop.buildings.map(b => [b.id, b])).values());
+        return uniqueBuildings.reduce((sum, b) => sum + b.rooms.filter(r => r.status === 'OCCUPIED').length, 0);
     }
 
     return (
@@ -100,7 +102,7 @@ export default function PropertiesPage() {
                                 </div>
                                 <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
                                     <div>
-                                        <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{prop.buildings.length}</div>
+                                        <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{new Set(prop.buildings.map(b => b.id)).size}</div>
                                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Buildings</div>
                                     </div>
                                     <div>

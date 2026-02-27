@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q');
+
     const rooms = await prisma.room.findMany({
+        where: query ? {
+            OR: [
+                { number: { contains: query } },
+                { type: { contains: query } },
+            ]
+        } : undefined,
         include: {
             building: {
                 include: {

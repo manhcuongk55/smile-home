@@ -47,6 +47,8 @@ model Room {
   contracts          Contract[]
   interactions       Interaction[]
   maintenanceTickets MaintenanceTicket[]
+  conversations      Conversation[]
+  meters             UtilityMeter[]
 }
 
 model Person {
@@ -64,6 +66,7 @@ model Person {
   contracts          Contract[]
   interactions       Interaction[]
   maintenanceTickets MaintenanceTicket[]
+  messages           Message[]
 }
 
 model Interaction {
@@ -81,6 +84,34 @@ model Interaction {
   tags       String   @default("") // comma-separated for SQLite
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  roomId     String?
+  room       Room?    @relation(fields: [roomId], references: [id])
+  status     String   @default("ACTIVE") // ACTIVE, ARCHIVED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  messages   Message[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String?
+  sender         Person?      @relation(fields: [senderId], references: [id])
+  role           String       @default("TENANT") // TENANT, STAFF, AI
+  content        String
+  
+  // HITL Fields
+  aiGenerated    Boolean      @default(false)
+  aiConfidence   Float?
+  aiExplanation  String?
+  status         String       @default("APPROVED") // PENDING, APPROVED, REJECTED, EDITED
+  
+  createdAt      DateTime     @default(now())
 }
 
 model Contract {
@@ -107,10 +138,16 @@ model Invoice {
   contractId    String
   contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
   invoiceNumber String   @unique
-  status        String   @default("PENDING") // PENDING, PAID, OVERDUE, CANCELLED
+  status        String   @default("DRAFT") // DRAFT, PENDING, PAID, OVERDUE, CANCELLED
   amount        Float
   dueDate       DateTime
   issuedDate    DateTime @default(now())
+  
+  // HITL Fields
+  aiGenerated   Boolean  @default(false)
+  aiConfidence  Float?
+  aiExplanation String?
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -138,7 +175,63 @@ model MaintenanceTicket {
   title        String
   description  String
   priority     String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  status       String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  status       String   @default("DRAFT") // DRAFT, OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CONFIRMED, CLOSED
+  
+  // HITL Fields
+  aiGenerated   Boolean  @default(false)
+  aiConfidence  Float?
+  aiExplanation String?
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model UtilityMeter {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  type      String   @default("ELECTRICITY") // ELECTRICITY, WATER
+  number    String?  // Meter serial number
+  readings  MeterReading[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MeterReading {
+  id            String   @id @default(cuid())
+  meterId       String
+  meter         UtilityMeter @relation(fields: [meterId], references: [id], onDelete: Cascade)
+  value         Float
+  readingDate   DateTime @default(now())
+  imageUrl      String?
+  
+  // HITL Fields
+  aiGenerated   Boolean  @default(true) // Usually from OCR
+  aiConfidence  Float?
+  aiExplanation String?
+  status        String   @default("DRAFT") // DRAFT, APPROVED, REJECTED
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AIAgent {
+  id           String   @id @default(cuid())
+  role         String   @unique // TENANT_SUPPORT, ACCOUNTING, MAINTENANCE, etc.
+  systemPrompt String
+  toolConfig   String?  // JSON string of allowed tools
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  entityType  String   // MaintenanceTicket, Invoice, MeterReading, etc.
+  entityId    String
+  action      String   // CREATE, UPDATE, APPROVE, REJECT, OVERRIDE
+  performedBy String   // User ID or "SYSTEM_AI"
+  oldValue    String?  // JSON snapshot
+  newValue    String?  // JSON snapshot
+  note        String?
+  timestamp   DateTime @default(now())
 }

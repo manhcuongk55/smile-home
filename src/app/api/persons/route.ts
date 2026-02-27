@@ -3,10 +3,21 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q');
     const role = searchParams.get('role');
 
     const persons = await prisma.person.findMany({
-        where: role ? { role } : undefined,
+        where: {
+            AND: [
+                role ? { role } : {},
+                query ? {
+                    OR: [
+                        { name: { contains: query } },
+                        { email: { contains: query } },
+                    ]
+                } : {},
+            ]
+        },
         include: {
             interactions: {
                 take: 3,

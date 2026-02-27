@@ -163,6 +163,50 @@ export async function POST() {
             await prisma.interaction.create({ data: id });
         }
 
+        // --- Create Contracts ---
+        const contract = await prisma.contract.create({
+            data: {
+                personId: createdPersons[7].id, // Kanya
+                roomId: rooms[0].id, // Room 101
+                startDate: new Date('2024-01-01'),
+                endDate: new Date('2024-12-31'),
+                monthlyRent: 12000,
+                status: 'ACTIVE',
+            }
+        });
+
+        // --- Create Invoices ---
+        const invoices = [
+            {
+                contractId: contract.id,
+                invoiceNumber: 'INV-2024-001',
+                amount: 12000,
+                status: 'PAID',
+                dueDate: new Date('2024-01-05'),
+                issuedDate: new Date('2024-01-01'),
+            },
+            {
+                contractId: contract.id,
+                invoiceNumber: 'INV-2024-002',
+                amount: 12000,
+                status: 'PAID',
+                dueDate: new Date('2024-02-05'),
+                issuedDate: new Date('2024-02-01'),
+            },
+            {
+                contractId: contract.id,
+                invoiceNumber: 'INV-2024-003',
+                amount: 500,
+                status: 'PAID',
+                dueDate: new Date('2024-02-10'),
+                issuedDate: new Date('2024-02-01'),
+            }
+        ];
+
+        for (const inv of invoices) {
+            await prisma.invoice.create({ data: inv });
+        }
+
         return NextResponse.json({
             message: 'Demo data seeded successfully!',
             counts: {

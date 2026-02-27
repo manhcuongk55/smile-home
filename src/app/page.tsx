@@ -42,16 +42,18 @@ export default function DashboardPage() {
 
   async function fetchData() {
     try {
-      const [propRes, roomRes, personRes, interRes] = await Promise.all([
+      const [propRes, roomRes, personRes, interRes, reportRes] = await Promise.all([
         fetch('/api/properties'),
         fetch('/api/rooms'),
         fetch('/api/persons?role=LEAD'),
         fetch('/api/interactions?limit=5'),
+        fetch('/api/reports/financial'),
       ]);
       const props = await propRes.json();
       const rooms = await roomRes.json();
       const leads = await personRes.json();
       const inters = await interRes.json();
+      const report = await reportRes.json();
 
       setStats({
         totalProperties: Array.isArray(props) ? props.length : 0,
@@ -60,6 +62,8 @@ export default function DashboardPage() {
         vacantRooms: Array.isArray(rooms) ? rooms.filter((r: { status: string }) => r.status === 'VACANT').length : 0,
         activeLeads: Array.isArray(leads) ? leads.length : 0,
         totalInteractions: Array.isArray(inters) ? inters.length : 0,
+        ...report,
+        totalInvoices: report.totalInvoices || 0,
       });
       setInteractions(Array.isArray(inters) ? inters : []);
     } catch (err) {
@@ -121,25 +125,25 @@ export default function DashboardPage() {
 
       <div className="stats-grid">
         <div className="stat-card blue">
-          <div className="stat-icon">🏢</div>
-          <div className="stat-value">{stats.totalProperties}</div>
-          <div className="stat-label">Properties</div>
+          <div className="stat-icon">💰</div>
+          <div className="stat-value">{(stats as any).totalRevenue?.toLocaleString() || '0'}</div>
+          <div className="stat-label">Total Revenue (THB)</div>
         </div>
         <div className="stat-card emerald">
           <div className="stat-icon">🏠</div>
           <div className="stat-value">{stats.totalRooms}</div>
-          <div className="stat-label">Total Rooms</div>
-          <div className="stat-change positive">{occupancyRate}% occupancy</div>
+          <div className="stat-label">Room Occupancy</div>
+          <div className="stat-change positive">{occupancyRate}% filled</div>
         </div>
         <div className="stat-card amber">
           <div className="stat-icon">🎯</div>
           <div className="stat-value">{stats.activeLeads}</div>
-          <div className="stat-label">Active Leads</div>
+          <div className="stat-label">Leads</div>
         </div>
         <div className="stat-card purple">
-          <div className="stat-icon">💬</div>
-          <div className="stat-value">{stats.totalInteractions}</div>
-          <div className="stat-label">Interactions</div>
+          <div className="stat-icon">📊</div>
+          <div className="stat-value">{(stats as any).totalInvoices || 0}</div>
+          <div className="stat-label">Invoices Issued</div>
         </div>
       </div>
 

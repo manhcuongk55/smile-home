@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface Lead {
     id: string;
@@ -121,7 +122,8 @@ export default function LeadsPage() {
                                         )}
                                         <div className="lead-meta">
                                             <span>{formatDate(lead.createdAt)}</span>
-                                            <div style={{ display: 'flex', gap: 4 }}>
+                                            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                                <Link href={`/leads/${lead.id}`} className="btn btn-sm btn-secondary" title="View Details">👁️</Link>
                                                 {stage.key !== 'CONVERTED' && stage.key !== 'LOST' && (
                                                     <>
                                                         {STAGES.indexOf(stage) < 4 && (

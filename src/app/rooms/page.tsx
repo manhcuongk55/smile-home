@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface Room {
     id: string;
@@ -9,29 +10,16 @@ interface Room {
     status: string;
     price: number;
     area: number;
-    buildingId: string;
     building: {
-        id: string;
         name: string;
-        property: {
-            id: string;
-            name: string;
-        };
+        property: { name: string };
     };
-}
-
-interface GroupedData {
-    propertyName: string;
-    buildings: {
-        buildingName: string;
-        rooms: Room[];
-    }[];
 }
 
 export default function RoomsPage() {
     const [rooms, setRooms] = useState<Room[]>([]);
-    const [statusFilter, setStatusFilter] = useState('ALL');
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+    const [toastMsg, setToastMsg] = useState('');
 
     useEffect(() => {
         fetchRooms();
@@ -43,119 +31,64 @@ export default function RoomsPage() {
         setRooms(Array.isArray(data) ? data : []);
     }
 
-    async function updateStatus(roomId: string, newStatus: string) {
+    async function updateStatus(roomId: string, status: string) {
         try {
-            await fetch(`/api/rooms/${roomId}`, {
+            const res = await fetch(`/api/rooms/${roomId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ status }),
             });
-            fetchRooms();
-            setSelectedRoom(null);
+            if (res.ok) {
+                setToastMsg(`Status updated to ${status}`);
+                fetchRooms();
+                setSelectedRoom(prev => prev ? { ...prev, status } : null);
+                setTimeout(() => setToastMsg(''), 3000);
+            }
         } catch (err) {
             console.error(err);
         }
     }
 
-    const statuses = ['ALL', 'VACANT', 'OCCUPIED', 'MAINTENANCE', 'RESERVED'];
-
-    function getGrouped(): GroupedData[] {
-        const filtered = statusFilter === 'ALL' ? rooms : rooms.filter((r) => r.status === statusFilter);
-        const grouped: Record<string, Record<string, Room[]>> = {};
-
-        filtered.forEach((room) => {
-            const propName = room.building?.property?.name || 'Unknown Property';
-            const buildName = room.building?.name || 'Unknown Building';
-            if (!grouped[propName]) grouped[propName] = {};
-            if (!grouped[propName][buildName]) grouped[propName][buildName] = [];
-            grouped[propName][buildName].push(room);
-        });
-
-        return Object.entries(grouped).map(([propertyName, buildings]) => ({
-            propertyName,
-            buildings: Object.entries(buildings).map(([buildingName, rooms]) => ({
-                buildingName,
-                rooms: rooms.sort((a, b) => a.number.localeCompare(b.number)),
-            })),
-        }));
-    }
-
-    function formatPrice(price: number) {
+    const formatPrice = (price: number) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(price);
-    }
+    };
 
-    const vacantCount = rooms.filter((r) => r.status === 'VACANT').length;
-    const occupiedCount = rooms.filter((r) => r.status === 'OCCUPIED').length;
-    const maintenanceCount = rooms.filter((r) => r.status === 'MAINTENANCE').length;
-    const reservedCount = rooms.filter((r) => r.status === 'RESERVED').length;
+    const grouped = rooms.reduce((acc, room) => {
+        const propName = room.building.property.name;
+        const bldName = room.building.name;
+        if (!acc[propName]) acc[propName] = {};
+        if (!acc[propName][bldName]) acc[propName][bldName] = [];
+        acc[propName][bldName].push(room);
+        return acc;
+    }, {} as Record<string, Record<string, Room[]>>);
 
-    const grouped = getGrouped();
+    const groupedArray = Object.entries(grouped).map(([prop, blds]) => ({
+        propertyName: prop,
+        buildings: Object.entries(blds).map(([bld, rooms]) => ({ buildingName: bld, rooms }))
+    }));
 
     return (
         <>
             <div className="page-header">
-                <h1>Room Status Engine</h1>
-                <p>Real-time view of all rooms across your property portfolio</p>
+                <h1>Room Status & Management</h1>
+                <p>Real-time occupancy and maintenance tracking</p>
             </div>
 
-            <div className="stats-grid" style={{ marginBottom: 24 }}>
-                <div className="stat-card emerald" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('VACANT')}>
-                    <div className="stat-icon">🟢</div>
-                    <div className="stat-value">{vacantCount}</div>
-                    <div className="stat-label">Vacant</div>
-                </div>
-                <div className="stat-card blue" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('OCCUPIED')}>
-                    <div className="stat-icon">🔵</div>
-                    <div className="stat-value">{occupiedCount}</div>
-                    <div className="stat-label">Occupied</div>
-                </div>
-                <div className="stat-card amber" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('MAINTENANCE')}>
-                    <div className="stat-icon">🟡</div>
-                    <div className="stat-value">{maintenanceCount}</div>
-                    <div className="stat-label">Maintenance</div>
-                </div>
-                <div className="stat-card purple" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('RESERVED')}>
-                    <div className="stat-icon">🟣</div>
-                    <div className="stat-value">{reservedCount}</div>
-                    <div className="stat-label">Reserved</div>
-                </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <div className="tabs">
-                    {statuses.map((s) => (
-                        <button
-                            key={s}
-                            className={`tab ${statusFilter === s ? 'active' : ''}`}
-                            onClick={() => setStatusFilter(s)}
-                        >
-                            {s === 'ALL' ? `All (${rooms.length})` : s.charAt(0) + s.slice(1).toLowerCase()}
-                        </button>
-                    ))}
-                </div>
-                <div className="status-legend">
-                    <div className="legend-item"><div className="legend-dot vacant" /> Vacant</div>
-                    <div className="legend-item"><div className="legend-dot occupied" /> Occupied</div>
-                    <div className="legend-item"><div className="legend-dot maintenance" /> Maintenance</div>
-                    <div className="legend-item"><div className="legend-dot reserved" /> Reserved</div>
-                </div>
-            </div>
-
-            <div className="room-grid-container">
-                {grouped.length === 0 ? (
+            <div className="card-container">
+                {groupedArray.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">🏠</div>
                         <h3>No rooms found</h3>
                         <p>Seed demo data from the Dashboard or add properties first.</p>
                     </div>
                 ) : (
-                    grouped.map((prop) => (
-                        <div key={prop.propertyName} className="property-section">
+                    groupedArray.map((prop) => (
+                        <div key={prop.propertyName} className="property-section" style={{ marginBottom: 24 }}>
                             <div className="property-section-header">
                                 <h2>🏢 {prop.propertyName}</h2>
                             </div>
                             {prop.buildings.map((bld) => (
-                                <div key={bld.buildingName}>
+                                <div key={bld.buildingName} style={{ marginTop: 16 }}>
                                     <div className="building-label">🏗️ {bld.buildingName}</div>
                                     <div className="room-grid">
                                         {bld.rooms.map((room) => (
@@ -226,11 +159,18 @@ export default function RoomsPage() {
                                         </button>
                                     ))}
                                 </div>
+                                <div style={{ marginTop: 20 }}>
+                                    <Link href={`/rooms/${selectedRoom.id}`} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                                        View Full Details & History
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
+
+            {toastMsg && <div className="toast success">✅ {toastMsg}</div>}
         </>
     );
 }

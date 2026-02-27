@@ -20,14 +20,16 @@ export default function Sidebar() {
                 { href: '/leads', label: 'Lead Pipeline', icon: '🎯' },
                 { href: '/rooms', label: 'Room Status', icon: '🏠' },
                 { href: '/properties', label: 'Properties', icon: '🏢' },
+                { href: '/contracts', label: 'Contracts', icon: '📄' },
+                { href: '/invoices', label: 'Invoices', icon: '💰' },
+                { href: '/maintenance', label: 'Maintenance', icon: '🔧' },
+                { href: '/utilities', label: 'Utilities', icon: '⚡' },
             ]
         },
         {
-            section: 'Phase 2 (Coming Soon)',
+            section: 'Analytics',
             items: [
-                { href: '#', label: 'Contracts', icon: '📄' },
-                { href: '#', label: 'Invoices', icon: '💰' },
-                { href: '#', label: 'Maintenance', icon: '🔧' },
+                { href: '/reports', label: 'Financial Reports', icon: '📈' },
             ]
         },
     ];

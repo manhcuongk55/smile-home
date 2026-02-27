@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import GlobalSearch from "@/components/GlobalSearch";
 
 export const metadata: Metadata = {
   title: "Smile Home — Property Operation System",
@@ -18,6 +19,7 @@ export default function RootLayout({
         <div className="app-layout">
           <Sidebar />
           <main className="main-content">
+            <GlobalSearch />
             {children}
           </main>
         </div>
