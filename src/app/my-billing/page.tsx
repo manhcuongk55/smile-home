@@ -55,9 +55,9 @@ export default function TenantBillingPage() {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 15 }}>
                                     <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{inv.invoiceNumber}</span>
                                     <span className={`badge ${inv.status === 'VERIFIED' ? 'emerald' :
-                                            inv.status === 'PAID' ? 'blue' :
-                                                inv.status === 'PENDING' ? 'amber' :
-                                                    'secondary'
+                                        inv.status === 'PAID' ? 'blue' :
+                                            inv.status === 'PENDING' ? 'amber' :
+                                                'secondary'
                                         }`}>
                                         {inv.status}
                                     </span>
@@ -68,7 +68,7 @@ export default function TenantBillingPage() {
                                 </div>
                                 <div style={{ fontSize: '0.9rem', marginBottom: 20 }}>
                                     <div>📅 Due: {formatDate(inv.dueDate)}</div>
-                                    <div>🏠 Room: {inv.contract.room.number}</div>
+                                    <div>🏠 Room: {inv.contract.room?.number} ({inv.contract.room?.building?.name})</div>
                                 </div>
                                 {inv.status === 'PENDING' && (
                                     <button className="btn btn-primary w-full">Pay Now</button>
