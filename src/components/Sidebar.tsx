@@ -11,6 +11,7 @@ export default function Sidebar() {
             section: 'Overview',
             items: [
                 { href: '/', label: 'Dashboard', icon: '📊' },
+                { href: '/hierarchy', label: 'Organization', icon: '🌲' },
             ]
         },
         {

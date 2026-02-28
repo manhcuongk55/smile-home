@@ -10,7 +10,10 @@ interface Lead {
     phone?: string;
     leadStatus: string;
     notes?: string;
+    source?: string;
+    value: number;
     createdAt: string;
+    updatedAt: string;
     interactions?: { id: string; subject: string; createdAt: string }[];
 }
 
@@ -32,6 +35,8 @@ export default function LeadsPage() {
         phone: '',
         leadStatus: 'NEW',
         notes: '',
+        source: '',
+        value: '0',
     });
     const [toastMsg, setToastMsg] = useState('');
 
@@ -54,7 +59,7 @@ export default function LeadsPage() {
                 body: JSON.stringify({ ...newLead, role: 'LEAD' }),
             });
             setShowCreateModal(false);
-            setNewLead({ name: '', email: '', phone: '', leadStatus: 'NEW', notes: '' });
+            setNewLead({ name: '', email: '', phone: '', leadStatus: 'NEW', notes: '', source: '', value: '0' });
             setToastMsg('Lead created!');
             fetchLeads();
             setTimeout(() => setToastMsg(''), 3000);
@@ -89,7 +94,12 @@ export default function LeadsPage() {
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                     <h1>Lead Pipeline</h1>
-                    <p>Track prospects from first contact to conversion</p>
+                    <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
+                        <p style={{ margin: 0 }}>Track prospects from first contact to conversion</p>
+                        <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-emerald)', padding: '2px 10px', borderRadius: 20, fontSize: '0.85rem', fontWeight: 'bold' }}>
+                            💰 Total Pipeline: ${leads.reduce((sum, l) => sum + (l.value || 0), 0).toLocaleString()}
+                        </div>
+                    </div>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
                     ➕ New Lead
@@ -110,7 +120,12 @@ export default function LeadsPage() {
                             <div className="kanban-cards">
                                 {stageLeads.map((lead) => (
                                     <div key={lead.id} className="kanban-card">
-                                        <div className="lead-name">{lead.name}</div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div className="lead-name">{lead.name}</div>
+                                            {new Date().getTime() - new Date(lead.updatedAt).getTime() > 3 * 24 * 60 * 60 * 1000 && (
+                                                <span title="Stale: No activity for >3 days" style={{ cursor: 'help', fontSize: '0.9rem' }}>⚠️</span>
+                                            )}
+                                        </div>
                                         <div className="lead-info">
                                             {lead.email && <span>📧 {lead.email}</span>}
                                             {lead.phone && <span>📱 {lead.phone}</span>}
@@ -120,6 +135,10 @@ export default function LeadsPage() {
                                                 {lead.notes.length > 60 ? lead.notes.slice(0, 60) + '...' : lead.notes}
                                             </div>
                                         )}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                            <span style={{ color: 'var(--accent-emerald)' }}>${(lead.value || 0).toLocaleString()}</span>
+                                            {lead.source && <span style={{ color: 'var(--text-muted)', opacity: 0.7 }}>📍 {lead.source}</span>}
+                                        </div>
                                         <div className="lead-meta">
                                             <span>{formatDate(lead.createdAt)}</span>
                                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -211,6 +230,26 @@ export default function LeadsPage() {
                                             <option key={s.key} value={s.key}>{s.icon} {s.label}</option>
                                         ))}
                                     </select>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Source</label>
+                                        <input
+                                            className="form-input"
+                                            placeholder="e.g. Facebook, Referral"
+                                            value={newLead.source}
+                                            onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Deal Value ($)</label>
+                                        <input
+                                            className="form-input"
+                                            type="number"
+                                            value={newLead.value}
+                                            onChange={(e) => setNewLead({ ...newLead, value: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label>Notes</label>
