@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Core Property Operation System for modern property management. Interaction-centric, API-first, multi-tenant ready.",
 };
 
+import { LanguageProvider } from "@/lib/LanguageContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,13 +18,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="app-layout">
-          <Sidebar />
-          <main className="main-content">
-            <GlobalSearch />
-            {children}
-          </main>
-        </div>
+        <LanguageProvider>
+          <div className="app-layout">
+            <Sidebar />
+            <main className="main-content">
+              <GlobalSearch />
+              {children}
+            </main>
+          </div>
+        </LanguageProvider>
       </body>
     </html>
   );
