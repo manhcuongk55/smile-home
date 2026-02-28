@@ -84,6 +84,8 @@ model Interaction {
   room       Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
   contractId String?
   contract   Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  invoiceId  String?
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
   channel    String   @default("PHONE") // PHONE, EMAIL, CHAT, WALK_IN, SMS, LINE
   direction  String   @default("INBOUND") // INBOUND, OUTBOUND, INTERNAL
   subject    String
@@ -109,7 +111,7 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   senderId       String?
   sender         Person?      @relation(fields: [senderId], references: [id])
-  role           String       @default("TENANT") // TENANT, STAFF, AI
+  role           String       @default("TENANT") // TENANT, STAFF, AI, ACCOUNTANT
   content        String
   
   // HITL Fields
@@ -145,7 +147,7 @@ model Invoice {
   contractId    String
   contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
   invoiceNumber String   @unique
-  status        String   @default("DRAFT") // DRAFT, PENDING, PAID, OVERDUE, CANCELLED
+  status        String   @default("DRAFT") // DRAFT, PENDING, PAID, VERIFIED, OVERDUE, CANCELLED
   amount        Float
   dueDate       DateTime
   issuedDate    DateTime @default(now())
@@ -158,7 +160,8 @@ model Invoice {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  receipts Receipt[]
+  receipts     Receipt[]
+  interactions Interaction[]
 }
 
 model Receipt {
