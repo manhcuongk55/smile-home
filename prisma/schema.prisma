@@ -127,7 +127,7 @@ model Contract {
   room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   personId    String
   person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
-  type        String   @default("RENTAL") // RENTAL, SALE, MANAGEMENT
+  type        String   @default("RENTAL") // RENTAL, SALE, MANAGEMENT, LEASE_EXTEND, SHORT_TERM
   status      String   @default("DRAFT") // DRAFT, ACTIVE, EXPIRED, TERMINATED
   startDate   DateTime
   endDate     DateTime
@@ -138,6 +138,7 @@ model Contract {
 
   invoices     Invoice[]
   interactions Interaction[]
+  documents    ContractDocument[]
 }
 
 model Invoice {
@@ -241,4 +242,18 @@ model ActivityLog {
   newValue    String?  // JSON snapshot
   note        String?
   timestamp   DateTime @default(now())
+}
+
+model ContractDocument {
+  id               String   @id @default(cuid())
+  contractId       String?
+  contract         Contract? @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  fileUrl          String
+  originalName     String
+  fileSize         Int
+  mimeType         String
+  documentType     String   @default("CONTRACT") // CONTRACT, PRODUCT_DETAIL
+  approvalStatus   String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
