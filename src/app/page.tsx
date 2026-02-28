@@ -145,7 +145,7 @@ export default function DashboardPage() {
         <div className="stat-card purple">
           <div className="stat-icon">📊</div>
           <div className="stat-value">{(stats as any).totalInvoices || 0}</div>
-          <div className="stat-label">{t('invoicesIssued')}</div>
+          <div className="stat-label">{t('totalInvoices')}</div>
         </div>
       </div>
 

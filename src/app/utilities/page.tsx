@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface Meter {
     id: string;
@@ -34,6 +35,7 @@ export default function UtilitiesPage() {
         meterNumber: '',
     });
     const [toastMsg, setToastMsg] = useState('');
+    const { t } = useLanguage();
 
     useEffect(() => {
         fetchMeters();
@@ -63,7 +65,7 @@ export default function UtilitiesPage() {
             if (res.ok) {
                 setShowRecordModal(false);
                 setNewReading({ ...newReading, value: 0 });
-                setToastMsg('Reading recorded!');
+                setToastMsg(t('readingRecorded'));
                 fetchMeters();
                 setTimeout(() => setToastMsg(''), 3000);
             }
@@ -76,11 +78,11 @@ export default function UtilitiesPage() {
         <>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h1>Utility Consumption</h1>
-                    <p>Monitor electricity and water usage across all rooms</p>
+                    <h1>{t('utilitiesTitle')}</h1>
+                    <p>{t('utilitiesSubtitle')}</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowRecordModal(true)}>
-                    ⚡ Record Reading
+                    {t('recordReadingBtn')}
                 </button>
             </div>
 
@@ -88,12 +90,12 @@ export default function UtilitiesPage() {
                 <div className="stat-card blue">
                     <div className="stat-icon">⚡</div>
                     <div className="stat-value">{meters.filter(m => m.type === 'ELECTRICITY').length}</div>
-                    <div className="stat-label">Electricity Meters</div>
+                    <div className="stat-label">{t('electricityMeters')}</div>
                 </div>
                 <div className="stat-card teal">
                     <div className="stat-icon">💧</div>
                     <div className="stat-value">{meters.filter(m => m.type === 'WATER').length}</div>
-                    <div className="stat-label">Water Meters</div>
+                    <div className="stat-label">{t('waterMeters')}</div>
                 </div>
             </div>
 
@@ -101,20 +103,20 @@ export default function UtilitiesPage() {
                 {meters.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">📊</div>
-                        <h3>No meters registered</h3>
-                        <p>Start by recording a utility reading for a room.</p>
+                        <h3>{t('noMeters')}</h3>
+                        <p>{t('startRecording')}</p>
                     </div>
                 ) : (
                     <div className="table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>Service</th>
-                                    <th>Room</th>
-                                    <th>Last Reading</th>
-                                    <th>Reading Date</th>
-                                    <th>Meter #</th>
-                                    <th>Actions</th>
+                                    <th>{t('service')}</th>
+                                    <th>{t('room')}</th>
+                                    <th>{t('lastReading')}</th>
+                                    <th>{t('readingDate')}</th>
+                                    <th>{t('meterNumber')}</th>
+                                    <th>{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -122,7 +124,7 @@ export default function UtilitiesPage() {
                                     <tr key={meter.id}>
                                         <td>
                                             <span className={`badge ${meter.type === 'ELECTRICITY' ? 'amber' : 'blue'}`}>
-                                                {meter.type === 'ELECTRICITY' ? '⚡ Electricity' : '💧 Water'}
+                                                {meter.type === 'ELECTRICITY' ? `⚡ ${t('electricity')}` : `💧 ${t('water')}`}
                                             </span>
                                         </td>
                                         <td>
@@ -133,11 +135,11 @@ export default function UtilitiesPage() {
                                             {meter.readings[0]?.value || 'N/A'} {meter.type === 'ELECTRICITY' ? 'kWh' : 'm³'}
                                         </td>
                                         <td style={{ fontSize: '0.85rem' }}>
-                                            {meter.readings[0] ? new Date(meter.readings[0].readingDate).toLocaleDateString() : 'Never'}
+                                            {meter.readings[0] ? new Date(meter.readings[0].readingDate).toLocaleDateString() : t('never')}
                                         </td>
                                         <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{meter.number}</td>
                                         <td>
-                                            <button className="btn btn-sm btn-secondary">History</button>
+                                            <button className="btn btn-sm btn-secondary">{t('history')}</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -151,35 +153,35 @@ export default function UtilitiesPage() {
                 <div className="modal-overlay" onClick={() => setShowRecordModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Record Utility Reading</h2>
+                            <h2>{t('recordUtilityModal')}</h2>
                             <button className="modal-close" onClick={() => setShowRecordModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleRecord}>
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>Service Type *</label>
+                                    <label>{t('serviceTypeLabel')}</label>
                                     <div style={{ display: 'flex', gap: 10 }}>
                                         <button
                                             type="button"
                                             className={`btn btn-sm ${newReading.type === 'ELECTRICITY' ? 'btn-primary' : 'btn-secondary'}`}
                                             onClick={() => setNewReading({ ...newReading, type: 'ELECTRICITY' })}
-                                        >⚡ Electricity</button>
+                                        >⚡ {t('electricity')}</button>
                                         <button
                                             type="button"
                                             className={`btn btn-sm ${newReading.type === 'WATER' ? 'btn-primary' : 'btn-secondary'}`}
                                             onClick={() => setNewReading({ ...newReading, type: 'WATER' })}
-                                        >💧 Water</button>
+                                        >💧 {t('water')}</button>
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Room *</label>
+                                    <label>{t('roomLabelSelect')}</label>
                                     <select
                                         className="form-select"
                                         value={newReading.roomId}
                                         onChange={(e) => setNewReading({ ...newReading, roomId: e.target.value })}
                                         required
                                     >
-                                        <option value="">Select a room...</option>
+                                        <option value="">{t('selectRoom')}</option>
                                         {rooms.map((r) => (
                                             <option key={r.id} value={r.id}>{r.building.name} - {r.number}</option>
                                         ))}
@@ -187,18 +189,18 @@ export default function UtilitiesPage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Reading Value *</label>
+                                        <label>{t('readingValueLabel')}</label>
                                         <input
                                             type="number"
                                             className="form-input"
-                                            placeholder="Current meter value"
+                                            placeholder={t('currentMeterValue') as string}
                                             value={newReading.value}
                                             onChange={(e) => setNewReading({ ...newReading, value: parseFloat(e.target.value) })}
                                             required
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Reading Date *</label>
+                                        <label>{t('readingDateLabel')}</label>
                                         <input
                                             type="date"
                                             className="form-input"
@@ -209,18 +211,18 @@ export default function UtilitiesPage() {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Meter Serial Number (Optional)</label>
+                                    <label>{t('meterSerialOptional')}</label>
                                     <input
                                         className="form-input"
-                                        placeholder="e.g. SN-99823"
+                                        placeholder={t('meterSerialPlaceholder') as string}
                                         value={newReading.meterNumber}
                                         onChange={(e) => setNewReading({ ...newReading, meterNumber: e.target.value })}
                                     />
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowRecordModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Save Reading</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowRecordModal(false)}>{t('cancel')}</button>
+                                <button type="submit" className="btn btn-primary">{t('saveReadingBtn')}</button>
                             </div>
                         </form>
                     </div>

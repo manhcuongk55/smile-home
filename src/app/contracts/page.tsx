@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface Contract {
     id: string;
@@ -47,6 +48,7 @@ export default function ContractsPage() {
         status: 'DRAFT',
     });
     const [toastMsg, setToastMsg] = useState('');
+    const { t } = useLanguage();
 
     useEffect(() => {
         fetchContracts();
@@ -92,7 +94,7 @@ export default function ContractsPage() {
                     deposit: 0,
                     status: 'DRAFT',
                 });
-                setToastMsg('Contract created successfully!');
+                setToastMsg(t('contractCreated'));
                 fetchContracts();
                 setTimeout(() => setToastMsg(''), 3000);
             }
@@ -109,7 +111,7 @@ export default function ContractsPage() {
                 body: JSON.stringify({ status: newStatus }),
             });
             if (res.ok) {
-                setToastMsg(`Contract status updated to ${newStatus}`);
+                setToastMsg(`${t('statusUpdatedTo')} ${t(newStatus.toLowerCase() as any) || newStatus}`);
                 fetchContracts();
                 setTimeout(() => setToastMsg(''), 3000);
             }
@@ -130,11 +132,11 @@ export default function ContractsPage() {
         <>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h1>Contract Management</h1>
-                    <p>Legally binding agreements between property and tenants</p>
+                    <h1>{t('contractManagementTitle')}</h1>
+                    <p>{t('contractManagementSubtitle')}</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                    ➕ New Contract
+                    ➕ {t('newContract')}
                 </button>
             </div>
 
@@ -142,21 +144,21 @@ export default function ContractsPage() {
                 {contracts.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">📄</div>
-                        <h3>No contracts found</h3>
-                        <p>Create your first contract to manage tenant stays.</p>
+                        <h3>{t('noContracts')}</h3>
+                        <p>{t('createContractToStart')}</p>
                     </div>
                 ) : (
                     <div className="table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>Tenant</th>
-                                    <th>Room</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Period</th>
-                                    <th>Rent</th>
-                                    <th>Actions</th>
+                                    <th>{t('tenant')}</th>
+                                    <th>{t('room')}</th>
+                                    <th>{t('type')}</th>
+                                    <th>{t('status')}</th>
+                                    <th>{t('period')}</th>
+                                    <th>{t('rent')}</th>
+                                    <th>{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -177,7 +179,7 @@ export default function ContractsPage() {
                                                     contract.status === 'PENDING_REVIEW' ? 'blue' :
                                                         'rose'
                                                 }`}>
-                                                {contract.status.replace('_', ' ')}
+                                                {t(contract.status.toLowerCase() as any) || contract.status.replace('_', ' ')}
                                             </span>
                                         </td>
                                         <td>
@@ -186,14 +188,14 @@ export default function ContractsPage() {
                                         <td style={{ fontWeight: 700 }}>{formatCurrency(contract.monthlyRent)}</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: 6 }}>
-                                                <button className="btn btn-sm btn-secondary">View</button>
+                                                <button className="btn btn-sm btn-secondary">{t('view')}</button>
                                                 {contract.status === 'DRAFT' && (
                                                     <button
                                                         className="btn btn-sm btn-primary"
                                                         onClick={() => moveStatus(contract.id, 'PENDING_REVIEW')}
                                                         style={{ fontSize: '0.65rem' }}
                                                     >
-                                                        Review
+                                                        {t('review')}
                                                     </button>
                                                 )}
                                                 {(contract.status === 'DRAFT' || contract.status === 'PENDING_REVIEW') && (
@@ -202,7 +204,7 @@ export default function ContractsPage() {
                                                         onClick={() => moveStatus(contract.id, 'ACTIVE')}
                                                         style={{ fontSize: '0.65rem', background: 'var(--accent-emerald)', borderColor: 'var(--accent-emerald)', color: 'white' }}
                                                     >
-                                                        Approve
+                                                        {t('approve')}
                                                     </button>
                                                 )}
                                             </div>
@@ -219,35 +221,35 @@ export default function ContractsPage() {
                 <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>New Contract</h2>
+                            <h2>{t('newContract')}</h2>
                             <button className="modal-close" onClick={() => setShowCreateModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleCreate}>
                             <div className="modal-body">
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Tenant *</label>
+                                        <label>{t('tenantLabel')}</label>
                                         <select
                                             className="form-select"
                                             value={newContract.personId}
                                             onChange={(e) => setNewContract({ ...newContract, personId: e.target.value })}
                                             required
                                         >
-                                            <option value="">Select a person...</option>
+                                            <option value="">{t('selectPerson')}</option>
                                             {persons.map((p) => (
                                                 <option key={p.id} value={p.id}>{p.name}</option>
                                             ))}
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label>Room *</label>
+                                        <label>{t('roomLabel')}</label>
                                         <select
                                             className="form-select"
                                             value={newContract.roomId}
                                             onChange={(e) => setNewContract({ ...newContract, roomId: e.target.value })}
                                             required
                                         >
-                                            <option value="">Select a room...</option>
+                                            <option value="">{t('selectRoom')}</option>
                                             {rooms.map((r) => (
                                                 <option key={r.id} value={r.id}>{r.building.name} - {r.number}</option>
                                             ))}
@@ -256,7 +258,7 @@ export default function ContractsPage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Start Date *</label>
+                                        <label>{t('startDateLabel')}</label>
                                         <input
                                             type="date"
                                             className="form-input"
@@ -266,7 +268,7 @@ export default function ContractsPage() {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>End Date *</label>
+                                        <label>{t('endDateLabel')}</label>
                                         <input
                                             type="date"
                                             className="form-input"
@@ -278,7 +280,7 @@ export default function ContractsPage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Monthly Rent (THB) *</label>
+                                        <label>{t('monthlyRentLabel')}</label>
                                         <input
                                             type="number"
                                             className="form-input"
@@ -288,7 +290,7 @@ export default function ContractsPage() {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Security Deposit (THB)</label>
+                                        <label>{t('depositLabel')}</label>
                                         <input
                                             type="number"
                                             className="form-input"
@@ -298,33 +300,33 @@ export default function ContractsPage() {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Contract Type</label>
+                                    <label>{t('contractTypeLabel')}</label>
                                     <select
                                         className="form-select"
                                         value={newContract.type}
                                         onChange={(e) => setNewContract({ ...newContract, type: e.target.value })}
                                     >
-                                        <option value="RENTAL">Rental Agreement</option>
-                                        <option value="SALE">Sale Agreement</option>
-                                        <option value="MANAGEMENT">Management Agreement</option>
+                                        <option value="RENTAL">{t('rentalAgreement')}</option>
+                                        <option value="SALE">{t('saleAgreement')}</option>
+                                        <option value="MANAGEMENT">{t('managementAgreement')}</option>
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Initial Status</label>
+                                    <label>{t('initialStatusLabel')}</label>
                                     <select
                                         className="form-select"
                                         value={newContract.status}
                                         onChange={(e) => setNewContract({ ...newContract, status: e.target.value })}
                                     >
-                                        <option value="DRAFT">Draft</option>
-                                        <option value="PENDING_REVIEW">Pending Review</option>
-                                        <option value="ACTIVE">Active (Immediate)</option>
+                                        <option value="DRAFT">{t('draft')}</option>
+                                        <option value="PENDING_REVIEW">{t('pendingReview')}</option>
+                                        <option value="ACTIVE">{t('activeImmediate')}</option>
                                     </select>
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Create Contract</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>{t('cancel')}</button>
+                                <button type="submit" className="btn btn-primary">{t('createContract')}</button>
                             </div>
                         </form>
                     </div>

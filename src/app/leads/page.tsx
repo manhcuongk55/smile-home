@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface Lead {
     id: string;
@@ -39,6 +40,7 @@ export default function LeadsPage() {
         value: '0',
     });
     const [toastMsg, setToastMsg] = useState('');
+    const { t } = useLanguage();
 
     useEffect(() => {
         fetchLeads();
@@ -60,7 +62,7 @@ export default function LeadsPage() {
             });
             setShowCreateModal(false);
             setNewLead({ name: '', email: '', phone: '', leadStatus: 'NEW', notes: '', source: '', value: '0' });
-            setToastMsg('Lead created!');
+            setToastMsg(t('leadCreated'));
             fetchLeads();
             setTimeout(() => setToastMsg(''), 3000);
         } catch (err) {
@@ -93,16 +95,16 @@ export default function LeadsPage() {
         <>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h1>Lead Pipeline</h1>
+                    <h1>{t('leadPipelineTitle')}</h1>
                     <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
-                        <p style={{ margin: 0 }}>Track prospects from first contact to conversion</p>
+                        <p style={{ margin: 0 }}>{t('leadPipelineSubtitle')}</p>
                         <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-emerald)', padding: '2px 10px', borderRadius: 20, fontSize: '0.85rem', fontWeight: 'bold' }}>
-                            💰 Total Pipeline: ${leads.reduce((sum, l) => sum + (l.value || 0), 0).toLocaleString()}
+                            💰 {t('totalPipeline')}: ${leads.reduce((sum, l) => sum + (l.value || 0), 0).toLocaleString()}
                         </div>
                     </div>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                    ➕ New Lead
+                    ➕ {t('newLeadBtn')}
                 </button>
             </div>
 
@@ -170,7 +172,7 @@ export default function LeadsPage() {
                                 ))}
                                 {stageLeads.length === 0 && (
                                     <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                        No leads
+                                        {t('noLeads')}
                                     </div>
                                 )}
                             </div>
@@ -183,16 +185,16 @@ export default function LeadsPage() {
                 <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>New Lead</h2>
+                            <h2>{t('newLeadBtn')}</h2>
                             <button className="modal-close" onClick={() => setShowCreateModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleCreate}>
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>Name *</label>
+                                    <label>{t('nameLabel')}</label>
                                     <input
                                         className="form-input"
-                                        placeholder="Full name"
+                                        placeholder={t('fullNamePlaceholder') as string}
                                         value={newLead.name}
                                         onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
                                         required
@@ -200,7 +202,7 @@ export default function LeadsPage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Email</label>
+                                        <label>{t('emailLabel')}</label>
                                         <input
                                             className="form-input"
                                             type="email"
@@ -210,7 +212,7 @@ export default function LeadsPage() {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Phone</label>
+                                        <label>{t('phoneLabel')}</label>
                                         <input
                                             className="form-input"
                                             placeholder="+66..."
@@ -220,7 +222,7 @@ export default function LeadsPage() {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Initial Status</label>
+                                    <label>{t('initialStatusLabel')}</label>
                                     <select
                                         className="form-select"
                                         value={newLead.leadStatus}
@@ -233,16 +235,16 @@ export default function LeadsPage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Source</label>
+                                        <label>{t('sourceLabel')}</label>
                                         <input
                                             className="form-input"
-                                            placeholder="e.g. Facebook, Referral"
+                                            placeholder={t('sourcePlaceholder') as string}
                                             value={newLead.source}
                                             onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Deal Value ($)</label>
+                                        <label>{t('dealValueLabel')}</label>
                                         <input
                                             className="form-input"
                                             type="number"
@@ -252,18 +254,18 @@ export default function LeadsPage() {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Notes</label>
+                                    <label>{t('notesLabel')}</label>
                                     <textarea
                                         className="form-textarea"
-                                        placeholder="Additional notes about this lead..."
+                                        placeholder={t('notesPlaceholder') as string}
                                         value={newLead.notes}
                                         onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })}
                                     />
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Create Lead</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>{t('cancel')}</button>
+                                <button type="submit" className="btn btn-primary">{t('createLeadBtn')}</button>
                             </div>
                         </form>
                     </div>

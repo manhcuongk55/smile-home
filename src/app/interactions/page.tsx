@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface Person {
     id: string;
@@ -47,6 +48,7 @@ export default function InteractionsPage() {
         tags: '',
     });
     const [toastMsg, setToastMsg] = useState('');
+    const { t } = useLanguage();
 
     useEffect(() => {
         fetchInteractions();
@@ -82,7 +84,7 @@ export default function InteractionsPage() {
             });
             setShowCreateModal(false);
             setNewInteraction({ personId: '', roomId: '', channel: 'PHONE', direction: 'INBOUND', subject: '', content: '', tags: '' });
-            setToastMsg('Interaction created!');
+            setToastMsg(t('interactionCreated'));
             fetchInteractions();
             setTimeout(() => setToastMsg(''), 3000);
         } catch (err) {
@@ -126,11 +128,11 @@ export default function InteractionsPage() {
         <>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h1>Unified Interaction Hub</h1>
-                    <p>Every communication linked to Person → Room → Contract</p>
+                    <h1>{t('interactionsTitle')}</h1>
+                    <p>{t('interactionsSubtitle')}</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                    ➕ New Interaction
+                    {t('newInteractionBtn')}
                 </button>
             </div>
 
@@ -139,7 +141,7 @@ export default function InteractionsPage() {
                     <span className="search-icon">🔍</span>
                     <input
                         className="search-input"
-                        placeholder="Search interactions by person, subject, or content..."
+                        placeholder={t('searchInteractions') as string}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -153,7 +155,7 @@ export default function InteractionsPage() {
                         className={`tab ${channelFilter === ch ? 'active' : ''}`}
                         onClick={() => setChannelFilter(ch)}
                     >
-                        {ch === 'ALL' ? 'All' : `${getChannelIcon(ch)} ${ch.replace('_', ' ')}`}
+                        {ch === 'ALL' ? t('all') : `${getChannelIcon(ch)} ${ch.replace('_', ' ')}`}
                     </button>
                 ))}
             </div>
@@ -162,8 +164,8 @@ export default function InteractionsPage() {
                 {filtered.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">💬</div>
-                        <h3>No interactions found</h3>
-                        <p>Create a new interaction or seed demo data from the Dashboard.</p>
+                        <h3>{t('noInteractionsFound')}</h3>
+                        <p>{t('seedInteractionsMsg')}</p>
                     </div>
                 ) : (
                     filtered.map((inter) => (
@@ -205,41 +207,41 @@ export default function InteractionsPage() {
                 <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>New Interaction</h2>
+                            <h2>{t('newInteractionModal')}</h2>
                             <button className="modal-close" onClick={() => setShowCreateModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleCreate}>
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>Person *</label>
+                                    <label>{t('personLabel')}</label>
                                     <select
                                         className="form-select"
                                         value={newInteraction.personId}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, personId: e.target.value })}
                                         required
                                     >
-                                        <option value="">Select a person...</option>
+                                        <option value="">{t('selectPersonInteraction')}</option>
                                         {persons.map((p) => (
-                                            <option key={p.id} value={p.id}>{p.name} ({p.email || p.phone || 'No contact'})</option>
+                                            <option key={p.id} value={p.id}>{p.name} ({p.email || p.phone || t('noContact')})</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Room (optional)</label>
+                                    <label>{t('roomOptional')}</label>
                                     <select
                                         className="form-select"
                                         value={newInteraction.roomId}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, roomId: e.target.value })}
                                     >
-                                        <option value="">No room linked</option>
+                                        <option value="">{t('noRoomLinked')}</option>
                                         {rooms.map((r) => (
-                                            <option key={r.id} value={r.id}>{r.building.name} - Room {r.number}</option>
+                                            <option key={r.id} value={r.id}>{r.building.name} - {t('room')} {r.number}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Channel</label>
+                                        <label>{t('channelLabel')}</label>
                                         <select
                                             className="form-select"
                                             value={newInteraction.channel}
@@ -254,51 +256,51 @@ export default function InteractionsPage() {
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label>Direction</label>
+                                        <label>{t('directionLabel')}</label>
                                         <select
                                             className="form-select"
                                             value={newInteraction.direction}
                                             onChange={(e) => setNewInteraction({ ...newInteraction, direction: e.target.value })}
                                         >
-                                            <option value="INBOUND">Inbound</option>
-                                            <option value="OUTBOUND">Outbound</option>
-                                            <option value="INTERNAL">Internal</option>
+                                            <option value="INBOUND">{t('inbound')}</option>
+                                            <option value="OUTBOUND">{t('outbound')}</option>
+                                            <option value="INTERNAL">{t('internal')}</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Subject *</label>
+                                    <label>{t('subjectLabel')}</label>
                                     <input
                                         className="form-input"
-                                        placeholder="e.g. Inquiry about Room 301"
+                                        placeholder={t('subjectPlaceholder') as string}
                                         value={newInteraction.subject}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, subject: e.target.value })}
                                         required
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Content *</label>
+                                    <label>{t('contentLabel')}</label>
                                     <textarea
                                         className="form-textarea"
-                                        placeholder="Interaction details..."
+                                        placeholder={t('contentPlaceholder') as string}
                                         value={newInteraction.content}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, content: e.target.value })}
                                         required
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label>Tags (comma-separated)</label>
+                                    <label>{t('tagsLabel')}</label>
                                     <input
                                         className="form-input"
-                                        placeholder="e.g. follow-up, pricing, viewing"
+                                        placeholder={t('tagsPlaceholder') as string}
                                         value={newInteraction.tags}
                                         onChange={(e) => setNewInteraction({ ...newInteraction, tags: e.target.value })}
                                     />
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Create Interaction</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>{t('cancel')}</button>
+                                <button type="submit" className="btn btn-primary">{t('createInteractionBtn')}</button>
                             </div>
                         </form>
                     </div>
