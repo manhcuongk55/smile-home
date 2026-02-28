@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const contract = await prisma.contract.findUnique({
         where: { id },
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json(contract);
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
         const body = await request.json();
