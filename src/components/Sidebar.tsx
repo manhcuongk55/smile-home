@@ -37,7 +37,7 @@ export default function Sidebar() {
     return (
         <aside className="sidebar">
             <div className="sidebar-logo">
-                <h2><span>Smile Home</span></h2>
+                <h2><span>Xgate</span></h2>
                 <div className="subtitle">Property Operation System</div>
             </div>
             <nav className="sidebar-nav">
