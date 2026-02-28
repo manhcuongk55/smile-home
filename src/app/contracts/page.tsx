@@ -594,15 +594,7 @@ export default function ContractsPage() {
                                         {/* Main Contract Group */}
                                         {selectedContract.documents.filter(d => d.documentType === 'CONTRACT').map((doc) => (
                                             <Fragment key={doc.id}>
-                                                <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '14px 16px',
-                                                background: 'var(--bg-card)',
-                                                border: '1px solid var(--border-subtle)',
-                                                borderRadius: 'var(--radius-md)',
-                                            }}>
+                                                <div className="doc-row">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📄</span>
                                                     <div>
@@ -612,7 +604,7 @@ export default function ContractsPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div className="doc-actions">
                                                     <span className={`badge ${approvalBadge(doc.approvalStatus)}`}>
                                                         {doc.approvalStatus}
                                                     </span>
@@ -660,15 +652,7 @@ export default function ContractsPage() {
                                         )}
                                         {selectedContract.documents.filter(d => d.documentType === 'PRODUCT_DETAIL').map((doc) => (
                                             <Fragment key={doc.id}>
-                                                <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '14px 16px',
-                                                background: 'var(--bg-card)',
-                                                border: '1px solid var(--border-subtle)',
-                                                borderRadius: 'var(--radius-md)',
-                                            }}>
+                                                <div className="doc-row">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📎</span>
                                                     <div>
@@ -683,7 +667,7 @@ export default function ContractsPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div className="doc-actions">
                                                     <span className={`badge ${approvalBadge(doc.approvalStatus)}`}>
                                                         {doc.approvalStatus}
                                                     </span>
