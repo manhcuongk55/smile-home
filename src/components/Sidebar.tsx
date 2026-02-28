@@ -41,41 +41,7 @@ export default function Sidebar() {
     return (
         <aside className="sidebar">
             <div className="sidebar-logo">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <h2><span>Xgate</span></h2>
-                    <div className="lang-switcher" style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.05)', padding: '4px', borderRadius: '6px' }}>
-                        <button
-                            onClick={() => setLanguage('en')}
-                            style={{
-                                border: 'none',
-                                background: language === 'en' ? 'var(--blue-500)' : 'transparent',
-                                color: 'white',
-                                fontSize: '0.6rem',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontWeight: 600
-                            }}
-                        >
-                            EN
-                        </button>
-                        <button
-                            onClick={() => setLanguage('vi')}
-                            style={{
-                                border: 'none',
-                                background: language === 'vi' ? 'var(--blue-500)' : 'transparent',
-                                color: 'white',
-                                fontSize: '0.6rem',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontWeight: 600
-                            }}
-                        >
-                            VN
-                        </button>
-                    </div>
-                </div>
+                <h2><span>Xgate</span></h2>
                 <div className="subtitle">Property Operation System</div>
             </div>
             <nav className="sidebar-nav">
