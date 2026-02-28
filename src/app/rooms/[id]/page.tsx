@@ -27,7 +27,7 @@ interface Room {
         status: string;
         createdAt: string;
     }[];
-    utilityMeters: {
+    meters: {
         id: string;
         type: string;
         readings: { value: number; readingDate: string }[];
@@ -147,7 +147,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         <div className="section-header">
                             <h2>Utility Readings</h2>
                         </div>
-                        {room.utilityMeters.map(meter => (
+                        {room.meters.map(meter => (
                             <div key={meter.id} className="info-item" style={{ marginBottom: 16 }}>
                                 <label style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     {meter.type}
