@@ -135,7 +135,7 @@ export default function BillingPage() {
                                                 Verify
                                             </button>
                                         )}
-                                        <button className="btn btn-sm btn-secondary" onClick={() => setShowLogModal(inv.id)}>Log Log</button>
+                                        <button className="btn btn-sm btn-secondary" onClick={() => setShowLogModal(inv.id)}>Add Note</button>
                                     </div>
                                 </td>
                             </tr>
