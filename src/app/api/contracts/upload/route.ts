@@ -19,6 +19,8 @@ export async function POST(req: Request) {
         const buildingName = (formData.get('buildingName') as string | null)?.trim();
         const monthlyRentRaw = (formData.get('monthlyRent') as string | null)?.trim();
         const typeRaw = (formData.get('type') as string | null)?.trim() || 'RENTAL';
+        const startDateRaw = formData.get('startDate') as string | null;
+        const endDateRaw = formData.get('endDate') as string | null;
         const VALID_TYPES = ['RENTAL', 'SALE', 'MANAGEMENT', 'LEASE_EXTEND', 'SHORT_TERM'];
         const contractType = VALID_TYPES.includes(typeRaw) ? typeRaw : 'RENTAL';
 
@@ -118,8 +120,8 @@ export async function POST(req: Request) {
                 roomId: room.id,
                 type: contractType,
                 status: 'DRAFT',
-                startDate: new Date(),
-                endDate: new Date(),
+                startDate: startDateRaw ? new Date(startDateRaw) : new Date(),
+                endDate: endDateRaw ? new Date(endDateRaw) : new Date(),
                 monthlyRent: parsedMonthlyRent,
                 deposit: 0,
             },
