@@ -96,8 +96,45 @@ export default function Sidebar() {
                     </div>
                 ))}
             </nav>
-            <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                {t('apiFirst')}
+            <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t('apiFirst')}</span>
+                    <div className="lang-switcher" style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.1)', padding: '4px', borderRadius: '6px' }}>
+                        <button
+                            onClick={() => setLanguage('en')}
+                            style={{
+                                border: 'none',
+                                background: language === 'en' ? '#3b82f6' : 'transparent',
+                                color: 'white',
+                                fontSize: '0.65rem',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 600
+                            }}
+                        >
+                            EN
+                        </button>
+                        <button
+                            onClick={() => setLanguage('vi')}
+                            style={{
+                                border: 'none',
+                                background: language === 'vi' ? '#3b82f6' : 'transparent',
+                                color: 'white',
+                                fontSize: '0.65rem',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 600
+                            }}
+                        >
+                            VN
+                        </button>
+                    </div>
+                </div>
+                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', opacity: 0.5 }}>
+                    v1.1-i18n-ready
+                </div>
             </div>
         </aside>
     );
