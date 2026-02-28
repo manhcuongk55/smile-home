@@ -18,7 +18,7 @@ export async function GET(
                 include: { reportedBy: true },
                 orderBy: { createdAt: 'desc' },
             },
-            utilityMeters: {
+            meters: {
                 include: { readings: { orderBy: { readingDate: 'desc' }, take: 1 } }
             }
         }
