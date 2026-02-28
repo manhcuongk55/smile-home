@@ -595,10 +595,10 @@ export default function ContractsPage() {
                                         {selectedContract.documents.filter(d => d.documentType === 'CONTRACT').map((doc) => (
                                             <Fragment key={doc.id}>
                                                 <div className="doc-row">
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📄</span>
-                                                    <div>
-                                                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{doc.originalName}</div>
+                                                    <div style={{ minWidth: 0 }}>
+                                                        <div style={{ fontWeight: 600, fontSize: '0.875rem', wordBreak: 'break-all' }}>{doc.originalName}</div>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                                                             {(doc.fileSize / (1024 * 1024)).toFixed(2)} MB · Uploaded {formatDate(doc.createdAt)}
                                                         </div>
@@ -653,11 +653,11 @@ export default function ContractsPage() {
                                         {selectedContract.documents.filter(d => d.documentType === 'PRODUCT_DETAIL').map((doc) => (
                                             <Fragment key={doc.id}>
                                                 <div className="doc-row">
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📎</span>
-                                                    <div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{doc.originalName}</div>
+                                                    <div style={{ minWidth: 0 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                            <div style={{ fontWeight: 600, fontSize: '0.875rem', wordBreak: 'break-all' }}>{doc.originalName}</div>
                                                             <span className="badge amber" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
                                                                 Product Detail
                                                             </span>
