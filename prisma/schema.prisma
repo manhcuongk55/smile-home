@@ -1,13 +1,13 @@
 // Smile Home — Core Property Operation System
-// Prisma Schema — SQLite for rapid development
+// Prisma Schema — PostgreSQL for production deployment
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Property {
@@ -90,7 +90,7 @@ model Interaction {
   direction  String   @default("INBOUND") // INBOUND, OUTBOUND, INTERNAL
   subject    String
   content    String
-  tags       String   @default("") // comma-separated for SQLite
+  tags       String   @default("") // comma-separated strings
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
