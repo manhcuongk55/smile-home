@@ -44,6 +44,7 @@ export default function ContractsPage() {
         endDate: '',
         monthlyRent: 0,
         deposit: 0,
+        status: 'DRAFT',
     });
     const [toastMsg, setToastMsg] = useState('');
 
@@ -51,7 +52,7 @@ export default function ContractsPage() {
         fetchContracts();
         fetchRooms();
         fetchPersons();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function fetchContracts() {
         const res = await fetch('/api/contracts');
@@ -89,8 +90,26 @@ export default function ContractsPage() {
                     endDate: '',
                     monthlyRent: 0,
                     deposit: 0,
+                    status: 'DRAFT',
                 });
                 setToastMsg('Contract created successfully!');
+                fetchContracts();
+                setTimeout(() => setToastMsg(''), 3000);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function moveStatus(contractId: string, newStatus: string) {
+        try {
+            const res = await fetch(`/api/contracts/${contractId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            if (res.ok) {
+                setToastMsg(`Contract status updated to ${newStatus}`);
                 fetchContracts();
                 setTimeout(() => setToastMsg(''), 3000);
             }
@@ -153,8 +172,12 @@ export default function ContractsPage() {
                                         </td>
                                         <td><span className="badge blue">{contract.type}</span></td>
                                         <td>
-                                            <span className={`badge ${contract.status === 'ACTIVE' ? 'emerald' : contract.status === 'DRAFT' ? 'amber' : 'rose'}`}>
-                                                {contract.status}
+                                            <span className={`badge ${contract.status === 'ACTIVE' ? 'emerald' :
+                                                contract.status === 'DRAFT' ? 'amber' :
+                                                    contract.status === 'PENDING_REVIEW' ? 'blue' :
+                                                        'rose'
+                                                }`}>
+                                                {contract.status.replace('_', ' ')}
                                             </span>
                                         </td>
                                         <td>
@@ -162,7 +185,27 @@ export default function ContractsPage() {
                                         </td>
                                         <td style={{ fontWeight: 700 }}>{formatCurrency(contract.monthlyRent)}</td>
                                         <td>
-                                            <button className="btn btn-sm btn-secondary">View Details</button>
+                                            <div style={{ display: 'flex', gap: 6 }}>
+                                                <button className="btn btn-sm btn-secondary">View</button>
+                                                {contract.status === 'DRAFT' && (
+                                                    <button
+                                                        className="btn btn-sm btn-primary"
+                                                        onClick={() => moveStatus(contract.id, 'PENDING_REVIEW')}
+                                                        style={{ fontSize: '0.65rem' }}
+                                                    >
+                                                        Review
+                                                    </button>
+                                                )}
+                                                {(contract.status === 'DRAFT' || contract.status === 'PENDING_REVIEW') && (
+                                                    <button
+                                                        className="btn btn-sm btn-emerald"
+                                                        onClick={() => moveStatus(contract.id, 'ACTIVE')}
+                                                        style={{ fontSize: '0.65rem', background: 'var(--accent-emerald)', borderColor: 'var(--accent-emerald)', color: 'white' }}
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -264,6 +307,18 @@ export default function ContractsPage() {
                                         <option value="RENTAL">Rental Agreement</option>
                                         <option value="SALE">Sale Agreement</option>
                                         <option value="MANAGEMENT">Management Agreement</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Initial Status</label>
+                                    <select
+                                        className="form-select"
+                                        value={newContract.status}
+                                        onChange={(e) => setNewContract({ ...newContract, status: e.target.value })}
+                                    >
+                                        <option value="DRAFT">Draft</option>
+                                        <option value="PENDING_REVIEW">Pending Review</option>
+                                        <option value="ACTIVE">Active (Immediate)</option>
                                     </select>
                                 </div>
                             </div>

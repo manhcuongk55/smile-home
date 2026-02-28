@@ -21,7 +21,7 @@ export default function HierarchyPage() {
                 setPeople(data);
                 setLoading(false);
             });
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const roots = people.filter(p => !p.parentId && (p.role === 'OWNER' || p.role === 'STAFF'));
 
@@ -43,7 +43,7 @@ export default function HierarchyPage() {
                         }}>
                             <div style={{ fontWeight: 'bold' }}>{child.name}</div>
                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                                {child.role} {child.email && `· ${child.email}`}
+                                {child.role} {child.email && `\u00B7 ${child.email}`}
                             </div>
                         </div>
                         {renderTree(child.id, depth + 1)}

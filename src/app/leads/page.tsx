@@ -42,7 +42,7 @@ export default function LeadsPage() {
 
     useEffect(() => {
         fetchLeads();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function fetchLeads() {
         const res = await fetch('/api/persons?role=LEAD');
