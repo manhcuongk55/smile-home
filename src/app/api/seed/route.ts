@@ -203,8 +203,59 @@ export async function POST() {
             }
         ];
 
+        // Add more varied invoice statuses for QA testing
+        invoices.push({
+            contractId: contract.id,
+            invoiceNumber: 'INV-2024-004',
+            amount: 1500,
+            status: 'PENDING',
+            dueDate: new Date('2024-03-05'),
+            issuedDate: new Date('2024-03-01'),
+        });
+        invoices.push({
+            contractId: contract.id,
+            invoiceNumber: 'INV-2024-005',
+            amount: 15500,
+            status: 'VERIFIED',
+            dueDate: new Date('2024-04-05'),
+            issuedDate: new Date('2024-04-01'),
+        });
+        invoices.push({
+            contractId: contract.id,
+            invoiceNumber: 'INV-2024-006',
+            amount: 15500,
+            status: 'DRAFT',
+            dueDate: new Date('2024-05-05'),
+            issuedDate: new Date('2024-05-01'),
+        });
+
         for (const inv of invoices) {
             await prisma.invoice.create({ data: inv });
+        }
+
+        // --- Create Utilities (for complete QA flow) ---
+        // 1. Create Meters first
+        const meters = [
+            { roomId: rooms[0].id, type: 'ELECTRICITY', number: 'ELEC-99102' },
+            { roomId: rooms[0].id, type: 'WATER', number: 'WAT-55102' },
+            { roomId: rooms[3].id, type: 'ELECTRICITY', number: 'ELEC-88201' }
+        ];
+
+        const createdMeters = [];
+        for (const m of meters) {
+            createdMeters.push(await prisma.utilityMeter.create({ data: m }));
+        }
+
+        // 2. Create Readings
+        const readings = [
+            { meterId: createdMeters[0].id, value: 1450.5, readingDate: new Date('2024-01-31') },
+            { meterId: createdMeters[1].id, value: 320.0, readingDate: new Date('2024-01-31') },
+            { meterId: createdMeters[0].id, value: 1580.0, readingDate: new Date('2024-02-28') },
+            { meterId: createdMeters[2].id, value: 500.0, readingDate: new Date('2024-02-28') }
+        ];
+
+        for (const r of readings) {
+            await prisma.meterReading.create({ data: r });
         }
 
         return NextResponse.json({
@@ -215,6 +266,8 @@ export async function POST() {
                 rooms: roomData.length,
                 persons: persons.length,
                 interactions: interactionsData.length,
+                utilities: readings.length,
+                invoices: invoices.length,
             },
         });
     } catch (error) {
