@@ -4,7 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import GlobalSearch from "@/components/GlobalSearch";
 
 export const metadata: Metadata = {
-  title: "Smile Home — Property Operation System",
+  title: "Xgate — Property Operation System",
   description: "Core Property Operation System for modern property management. Interaction-centric, API-first, multi-tenant ready.",
 };
 
