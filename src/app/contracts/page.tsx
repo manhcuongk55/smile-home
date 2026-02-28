@@ -30,6 +30,8 @@ interface Contract {
     endDate: string;
     monthlyRent: number;
     deposit: number;
+    productName?: string;
+    productArea?: string;
     createdAt: string;
     documents: ContractDocument[];
 }
@@ -86,6 +88,12 @@ function approvalBadge(status: string) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 import { useLanguage } from '@/context/LanguageContext';
+import CombinedSelect from '@/components/CombinedSelect';
+import FilterArea from '@/components/FilterArea';
+
+const VIETNAM_PROVINCES = [
+    'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau', 'Cần Thơ', 'Cao Bằng', 'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương', 'Hải Phòng', 'Hậu Giang', 'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'TP Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
+];
 
 export default function ContractsPage() {
     const { t } = useLanguage();
@@ -102,6 +110,8 @@ export default function ContractsPage() {
     const [uploadMonthlyRent, setUploadMonthlyRent] = useState('');
     const [uploadType, setUploadType] = useState('RENTAL');
     const [uploadProductFile, setUploadProductFile] = useState<File | null>(null);
+    const [uploadProductName, setUploadProductName] = useState('');
+    const [uploadProductArea, setUploadProductArea] = useState('');
     const [isUploading, setIsUploading] = useState(false);
 
     // Detail modal
@@ -115,6 +125,7 @@ export default function ContractsPage() {
 
     // Toast
     const [toastMsg, setToastMsg] = useState('');
+    const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
 
     useEffect(() => {
         fetchContracts();
@@ -147,6 +158,8 @@ export default function ContractsPage() {
         formData.append('buildingName', uploadBuildingName.trim());
         formData.append('monthlyRent', uploadMonthlyRent);
         formData.append('type', uploadType);
+        formData.append('productName', uploadProductName.trim());
+        formData.append('productArea', uploadProductArea.trim());
         if (uploadProductFile) {
             formData.append('productFile', uploadProductFile);
         }
@@ -165,9 +178,12 @@ export default function ContractsPage() {
                 setUploadBuildingName('');
                 setUploadMonthlyRent('');
                 setUploadType('RENTAL');
+                setUploadProductName('');
+                setUploadProductArea('');
                 setUploadProductFile(null);
                 setToastMsg(t.contracts.toastSuccess);
                 fetchContracts();
+                setSelectedAreas([]);
                 setTimeout(() => setToastMsg(''), 3000);
             } else {
                 const data = await res.json();
@@ -191,8 +207,16 @@ export default function ContractsPage() {
                     <h1>{t.contracts.pageTitle}</h1>
                     <p>{t.contracts.pageSubtitle}</p>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn btn-secondary" onClick={() => setShowUploadModal(true)}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <FilterArea 
+                        options={VIETNAM_PROVINCES}
+                        selectedValues={selectedAreas}
+                        onApply={(vals) => {
+                            setSelectedAreas(vals);
+                            setCurrentPage(1);
+                        }}
+                    />
+                    <button className="btn btn-primary" onClick={() => setShowUploadModal(true)}>
                         {t.contracts.uploadBtn}
                     </button>
                 </div>
@@ -213,6 +237,8 @@ export default function ContractsPage() {
                                 <thead>
                                     <tr>
                                         <th>{t.contracts.colTenant}</th>
+                                        <th>{t.contracts.colProductName}</th>
+                                        <th>{t.contracts.colProductArea}</th>
                                         <th>{t.contracts.colRoom}</th>
                                         <th>{t.contracts.colType}</th>
                                         <th>{t.contracts.colStatus}</th>
@@ -229,6 +255,12 @@ export default function ContractsPage() {
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                                     {contract.person.email || '—'}
                                                 </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ fontWeight: 600 }}>{contract.productName || '—'}</div>
+                                            </td>
+                                            <td>
+                                                <div style={{ fontWeight: 600 }}>{contract.productArea || '—'}</div>
                                             </td>
                                             <td>
                                                 <div style={{ fontWeight: 600 }}>{contract.room.number}</div>
@@ -377,6 +409,29 @@ export default function ContractsPage() {
                                             value={uploadBuildingName}
                                             onChange={(e) => setUploadBuildingName(e.target.value)}
                                             required
+                                            disabled={isUploading}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>{t.contracts.labelProductName}</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder={t.contracts.placeholderProductName}
+                                            value={uploadProductName}
+                                            onChange={(e) => setUploadProductName(e.target.value)}
+                                            disabled={isUploading}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>{t.contracts.labelProductArea}</label>
+                                        <CombinedSelect 
+                                            options={VIETNAM_PROVINCES}
+                                            value={uploadProductArea}
+                                            onChange={setUploadProductArea}
+                                            placeholder={t.contracts.placeholderProductArea}
                                             disabled={isUploading}
                                         />
                                     </div>

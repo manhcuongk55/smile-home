@@ -24,7 +24,7 @@ export default function Sidebar() {
                 { href: '/rooms', label: t.navRooms, icon: '🏠' },
                 { href: '/properties', label: t.navProperties, icon: '🏢' },
                 { href: '/contracts', label: t.navContracts, icon: '📄' },
-                { href: '/invoices', label: t.navInvoices, icon: '💰' },
+                { href: '/invoices', label: t.navContracts, icon: '💰' },
                 { href: '/maintenance', label: t.navMaintenance, icon: '🔧' },
                 { href: '/utilities', label: t.navUtilities, icon: '⚡' },
             ]

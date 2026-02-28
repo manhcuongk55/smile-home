@@ -133,6 +133,8 @@ model Contract {
   endDate     DateTime
   monthlyRent Float    @default(0)
   deposit     Float    @default(0)
+  productName String?
+  productArea String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -1,11 +1,32 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-
-const prisma = new PrismaClient();
+import { put } from '@vercel/blob';
+import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
+
+async function uploadFile(file: File, prefix: string): Promise<string> {
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+        // Upload to Vercel Blob in production
+        const blob = await put(`${prefix}/${Date.now()}-${file.name}`, file, {
+            access: 'public',
+        });
+        return blob.url;
+    } else {
+        // Fallback to local storage for development
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const uploadDir = join(process.cwd(), 'public', 'uploads');
+        await mkdir(uploadDir, { recursive: true });
+        const timestamp = Date.now();
+        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filename = `${prefix ? prefix + '-' : ''}${timestamp}-${safeName}`;
+        const filePath = join(uploadDir, filename);
+        await writeFile(filePath, buffer);
+        return `/uploads/${filename}`;
+    }
+}
 
 export async function POST(req: Request) {
     try {
@@ -47,22 +68,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Monthly rent is required and must be >= 0' }, { status: 400 });
         }
 
+        const productName = (formData.get('productName') as string | null)?.trim() || null;
+        const productArea = (formData.get('productArea') as string | null)?.trim() || null;
         const parsedMonthlyRent = parseFloat(monthlyRentRaw);
 
-        // ── Save file to disk ─────────────────────────────────────────────────
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        const uploadDir = join(process.cwd(), 'public', 'uploads');
-        await mkdir(uploadDir, { recursive: true });
-
-        const timestamp = Date.now();
-        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filename = `${timestamp}-${safeName}`;
-        const filePath = join(uploadDir, filename);
-        await writeFile(filePath, buffer);
-
-        const fileUrl = `/uploads/${filename}`;
+        // ── Upload files ──────────────────────────────────────────────────────
+        const fileUrl = await uploadFile(file, 'contracts');
 
         // ── 1. Find or create Person ──────────────────────────────────────────
         let person = tenantEmail
@@ -124,6 +135,8 @@ export async function POST(req: Request) {
                 endDate: endDateRaw ? new Date(endDateRaw) : new Date(),
                 monthlyRent: parsedMonthlyRent,
                 deposit: 0,
+                productName,
+                productArea,
             },
         });
 
@@ -143,16 +156,7 @@ export async function POST(req: Request) {
 
         // ── 6. Handle Mandatory Product Detail File ──────────────────────────
         if (productFile && productFile.size > 0) {
-            const productBytes = await productFile.arrayBuffer();
-            const productBuffer = Buffer.from(productBytes);
-
-            const productTimestamp = Date.now();
-            const productSafeName = productFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const productFilename = `product-${productTimestamp}-${productSafeName}`;
-            const productFilePath = join(uploadDir, productFilename);
-            await writeFile(productFilePath, productBuffer);
-
-            const productFileUrl = `/uploads/${productFilename}`;
+            const productFileUrl = await uploadFile(productFile, 'products');
 
             await prisma.contractDocument.create({
                 data: {
