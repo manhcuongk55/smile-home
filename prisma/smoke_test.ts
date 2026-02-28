@@ -36,7 +36,8 @@ async function runTests() {
 
         console.log('\n✨ All automated API checks passed successfully!');
     } catch (error) {
-        console.error('\n💥 Test suite failed:', error.message);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('\n💥 Test suite failed:', errorMessage);
         process.exit(1);
     }
 }
