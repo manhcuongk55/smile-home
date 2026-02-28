@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
             personId: body.personId,
             roomId: body.roomId || null,
             contractId: body.contractId || null,
+            invoiceId: body.invoiceId || null,
             channel: body.channel || 'PHONE',
             direction: body.direction || 'INBOUND',
             subject: body.subject,
