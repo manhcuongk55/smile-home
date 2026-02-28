@@ -12,6 +12,7 @@ export default function Sidebar() {
             items: [
                 { href: '/', label: 'Dashboard', icon: '📊' },
                 { href: '/hierarchy', label: 'Organization', icon: '🌲' },
+                { href: '/billing', label: 'Billing & Accounting', icon: '💳' },
             ]
         },
         {
