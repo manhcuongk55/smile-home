@@ -261,7 +261,7 @@ export default function ContractsPage() {
                                         <th>Room</th>
                                         <th>Type</th>
                                         <th>Status</th>
-                                        <th>Period</th>
+                                        <th>Upload Date</th>
                                         <th>Rent</th>
                                         <th>Actions</th>
                                     </tr>
@@ -291,7 +291,7 @@ export default function ContractsPage() {
                                             </td>
                                             <td>
                                                 <div style={{ fontSize: '0.85rem' }}>
-                                                    {formatDate(contract.startDate)} – {formatDate(contract.endDate)}
+                                                    {formatDate(contract.createdAt)}
                                                 </div>
                                             </td>
                                             <td style={{ fontWeight: 700 }}>
@@ -426,34 +426,36 @@ export default function ContractsPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="form-group">
-                                    <label>Contract Type *</label>
-                                    <select
-                                        className="form-select"
-                                        value={uploadType}
-                                        onChange={(e) => setUploadType(e.target.value)}
-                                        required
-                                        disabled={isUploading}
-                                    >
-                                        <option value="RENTAL">Rental Agreement</option>
-                                        <option value="SALE">Sale Agreement</option>
-                                        <option value="MANAGEMENT">Management Agreement</option>
-                                        <option value="LEASE_EXTEND">Lease Extension</option>
-                                        <option value="SHORT_TERM">Short Term Rental</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Rent (VNĐ) *</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        placeholder="e.g. 8000"
-                                        min="0"
-                                        value={uploadMonthlyRent}
-                                        onChange={(e) => setUploadMonthlyRent(e.target.value)}
-                                        required
-                                        disabled={isUploading}
-                                    />
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Rent (VNĐ) *</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            placeholder="e.g. 8000"
+                                            min="0"
+                                            value={uploadMonthlyRent}
+                                            onChange={(e) => setUploadMonthlyRent(e.target.value)}
+                                            required
+                                            disabled={isUploading}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Contract Type *</label>
+                                        <select
+                                            className="form-select"
+                                            value={uploadType}
+                                            onChange={(e) => setUploadType(e.target.value)}
+                                            required
+                                            disabled={isUploading}
+                                        >
+                                            <option value="RENTAL">Rental Agreement</option>
+                                            <option value="SALE">Sale Agreement</option>
+                                            <option value="MANAGEMENT">Management Agreement</option>
+                                            <option value="LEASE_EXTEND">Lease Extension</option>
+                                            <option value="SHORT_TERM">Short Term Rental</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label>Main Contract PDF *</label>
@@ -597,9 +599,9 @@ export default function ContractsPage() {
                                         </div>
                                     </div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Period</div>
+                                        <div className="detail-field-label">Upload Date</div>
                                         <div className="detail-field-value">
-                                            {formatDate(selectedContract.startDate)} – {formatDate(selectedContract.endDate)}
+                                            {formatDate(selectedContract.createdAt)}
                                         </div>
                                     </div>
                                 </div>
@@ -639,17 +641,25 @@ export default function ContractsPage() {
                                         {/* Main Contract Group */}
                                         {selectedContract.documents.filter(d => d.documentType === 'CONTRACT').map((doc) => (
                                             <Fragment key={doc.id}>
-                                                <div className="doc-row">
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                                                <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '14px 16px',
+                                                background: 'var(--bg-card)',
+                                                border: '1px solid var(--border-subtle)',
+                                                borderRadius: 'var(--radius-md)',
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📄</span>
-                                                    <div style={{ minWidth: 0 }}>
-                                                        <div style={{ fontWeight: 600, fontSize: '0.875rem', wordBreak: 'break-all' }}>{doc.originalName}</div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{doc.originalName}</div>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                                                             {(doc.fileSize / (1024 * 1024)).toFixed(2)} MB · Uploaded {formatDate(doc.createdAt)}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="doc-actions">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                     <span className={`badge ${approvalBadge(doc.approvalStatus)}`}>
                                                         {doc.approvalStatus}
                                                     </span>
@@ -697,12 +707,20 @@ export default function ContractsPage() {
                                         )}
                                         {selectedContract.documents.filter(d => d.documentType === 'PRODUCT_DETAIL').map((doc) => (
                                             <Fragment key={doc.id}>
-                                                <div className="doc-row">
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                                                <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '14px 16px',
+                                                background: 'var(--bg-card)',
+                                                border: '1px solid var(--border-subtle)',
+                                                borderRadius: 'var(--radius-md)',
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📎</span>
-                                                    <div style={{ minWidth: 0 }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                            <div style={{ fontWeight: 600, fontSize: '0.875rem', wordBreak: 'break-all' }}>{doc.originalName}</div>
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{doc.originalName}</div>
                                                             <span className="badge amber" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
                                                                 Product Detail
                                                             </span>
@@ -712,7 +730,7 @@ export default function ContractsPage() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="doc-actions">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                     <span className={`badge ${approvalBadge(doc.approvalStatus)}`}>
                                                         {doc.approvalStatus}
                                                     </span>

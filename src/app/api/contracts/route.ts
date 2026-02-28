@@ -38,3 +38,23 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create contract' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: 'Contract ID is required' }, { status: 400 });
+        }
+
+        await prisma.contract.delete({
+            where: { id },
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Failed to delete contract:', error);
+        return NextResponse.json({ error: 'Failed to delete contract' }, { status: 500 });
+    }
+}
