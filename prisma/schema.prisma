@@ -58,6 +58,13 @@ model Person {
   phone      String?
   role       String   @default("LEAD") // TENANT, LEAD, OWNER, INVESTOR, STAFF
   leadStatus String?  // NEW, CONTACTED, VIEWING_SCHEDULED, NEGOTIATING, CONVERTED, LOST
+  
+  // Sales & Hierarchy Fields
+  parentId       String?  // Hierarchical roles (e.g., Manager -> Agent)
+  source         String?  // Marketing attribution (e.g., Facebook, Referral)
+  value          Float    @default(0) // Potential deal size
+  commissionRate Float    @default(0) // For agents
+  
   notes      String?
   tenantId   String   @default("default")
   createdAt  DateTime @default(now())
