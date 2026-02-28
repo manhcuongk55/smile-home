@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
-import { useLanguage } from '@/context/LanguageContext';
-import { translations } from '@/lib/translations';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -47,15 +45,52 @@ interface Person {
     name: string;
 }
 
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function formatDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+}
+
+function formatCurrency(amount: number) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        maximumFractionDigits: 0,
+    }).format(amount);
+}
+
+function statusBadge(status: string) {
+    if (status === 'ACTIVE') return 'emerald';
+    if (status === 'DRAFT') return 'amber';
+    return 'rose';
+}
+
+function typeBadge(type: string) {
+    if (type === 'SALE') return 'purple';
+    if (type === 'MANAGEMENT') return 'teal';
+    if (type === 'LEASE_EXTEND') return 'amber';
+    if (type === 'SHORT_TERM') return 'rose';
+    return 'blue'; // RENTAL default
+}
+
+function approvalBadge(status: string) {
+    if (status === 'APPROVED') return 'emerald';
+    if (status === 'PENDING') return 'amber';
+    return 'rose';
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function ContractsPage() {
-    const { language } = useLanguage();
-    const t = translations[language].contracts;
+import { useLanguage } from '@/context/LanguageContext';
 
+export default function ContractsPage() {
+    const { t } = useLanguage();
     const [contracts, setContracts] = useState<Contract[]>([]);
-    const [rooms, setRooms] = useState<Room[]>([]);
-    const [persons, setPersons] = useState<Person[]>([]);
+
 
     // Upload modal
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -83,49 +118,24 @@ export default function ContractsPage() {
 
     useEffect(() => {
         fetchContracts();
-        fetchRooms();
-        fetchPersons();
     }, []);
 
     // ── Fetchers ───────────────────────────────────────────────────────────────
 
     async function fetchContracts() {
-        try {
-            const res = await fetch('/api/contracts');
-            const data = await res.json();
-            setContracts(Array.isArray(data) ? data : []);
-            setCurrentPage(1);
-        } catch (err) {
-            console.error('Fetch error:', err);
-        }
+        const res = await fetch('/api/contracts');
+        const data = await res.json();
+        setContracts(Array.isArray(data) ? data : []);
+        setCurrentPage(1);
     }
 
-    async function fetchRooms() {
-        try {
-            const res = await fetch('/api/rooms');
-            const data = await res.json();
-            setRooms(Array.isArray(data) ? data : []);
-        } catch (err) {
-            console.error('Fetch rooms error:', err);
-        }
-    }
-
-    async function fetchPersons() {
-        try {
-            const res = await fetch('/api/persons');
-            const data = await res.json();
-            setPersons(Array.isArray(data) ? data : []);
-        } catch (err) {
-            console.error('Fetch persons error:', err);
-        }
-    }
 
     // ── Handlers ───────────────────────────────────────────────────────────────
 
     async function handleUpload(e: React.FormEvent) {
         e.preventDefault();
         if (!uploadFile || !uploadProductFile || !uploadTenantName.trim() || !uploadRoomNumber.trim() || !uploadBuildingName.trim() || !uploadMonthlyRent) {
-            alert('Please fill in all required fields and select both PDF files.');
+            alert(t.contracts.alertRequired);
             return;
         }
         setIsUploading(true);
@@ -156,74 +166,19 @@ export default function ContractsPage() {
                 setUploadMonthlyRent('');
                 setUploadType('RENTAL');
                 setUploadProductFile(null);
-                setToastMsg('Contract uploaded successfully!');
+                setToastMsg(t.contracts.toastSuccess);
                 fetchContracts();
                 setTimeout(() => setToastMsg(''), 3000);
             } else {
                 const data = await res.json();
-                alert(data.error || 'Upload failed');
+                alert(data.error || t.contracts.errorUpload);
             }
         } catch (err) {
             console.error(err);
-            alert('Upload failed');
+            alert(t.contracts.errorUpload);
         } finally {
             setIsUploading(false);
         }
-    }
-
-    async function moveStatus(contractId: string, newStatus: string) {
-        try {
-            const res = await fetch(`/api/contracts/${contractId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-            });
-            if (res.ok) {
-                setToastMsg(`Contract status updated to ${newStatus}`);
-                fetchContracts();
-                setTimeout(() => setToastMsg(''), 3000);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
-    function formatDate(dateStr: string) {
-        return new Date(dateStr).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-        });
-    }
-
-    function formatCurrency(amount: number) {
-        return new Intl.NumberFormat(language === 'vi' ? 'vi-VN' : 'en-US', {
-            style: 'currency',
-            currency: language === 'vi' ? 'VND' : 'USD',
-            maximumFractionDigits: 0,
-        }).format(amount);
-    }
-
-    function statusBadge(status: string) {
-        if (status === 'ACTIVE') return 'emerald';
-        if (status === 'DRAFT') return 'amber';
-        return 'rose';
-    }
-
-    function typeBadge(type: string) {
-        if (type === 'SALE') return 'purple';
-        if (type === 'MANAGEMENT') return 'teal';
-        if (type === 'LEASE_EXTEND') return 'amber';
-        if (type === 'SHORT_TERM') return 'rose';
-        return 'blue'; // RENTAL default
-    }
-
-    function approvalBadge(status: string) {
-        if (status === 'APPROVED') return 'emerald';
-        if (status === 'PENDING') return 'amber';
-        return 'rose';
     }
 
     // ── Render ─────────────────────────────────────────────────────────────────
@@ -233,12 +188,12 @@ export default function ContractsPage() {
             {/* Page Header */}
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h1>{t?.title || 'Contract Management'}</h1>
-                    <p>{t?.subtitle || 'Legally binding agreements between property and tenants'}</p>
+                    <h1>{t.contracts.pageTitle}</h1>
+                    <p>{t.contracts.pageSubtitle}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn btn-secondary" onClick={() => setShowUploadModal(true)}>
-                        📄 {t?.uploadBtn || 'Upload Contract PDF'}
+                        {t.contracts.uploadBtn}
                     </button>
                 </div>
             </div>
@@ -248,8 +203,8 @@ export default function ContractsPage() {
                 {contracts.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">📄</div>
-                        <h3>No contracts found</h3>
-                        <p>Create your first contract or upload a PDF to get started.</p>
+                        <h3>{t.contracts.emptyTitle}</h3>
+                        <p>{t.contracts.emptyDesc}</p>
                     </div>
                 ) : (
                     <>
@@ -257,13 +212,13 @@ export default function ContractsPage() {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Tenant</th>
-                                        <th>Room</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Upload Date</th>
-                                        <th>Rent</th>
-                                        <th>Actions</th>
+                                        <th>{t.contracts.colTenant}</th>
+                                        <th>{t.contracts.colRoom}</th>
+                                        <th>{t.contracts.colType}</th>
+                                        <th>{t.contracts.colStatus}</th>
+                                        <th>{t.contracts.colDate}</th>
+                                        <th>{t.contracts.colRent}</th>
+                                        <th>{t.contracts.colActions}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -282,11 +237,13 @@ export default function ContractsPage() {
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className={`badge ${typeBadge(contract.type)}`}>{contract.type}</span>
+                                                <span className={`badge ${typeBadge(contract.type)}`}>
+                                                    {t.contracts.types[contract.type as keyof typeof t.contracts.types] || contract.type}
+                                                </span>
                                             </td>
                                             <td>
                                                 <span className={`badge ${statusBadge(contract.status)}`}>
-                                                    {contract.status}
+                                                    {t.contracts.statuses[contract.status as keyof typeof t.contracts.statuses] || contract.status}
                                                 </span>
                                             </td>
                                             <td>
@@ -298,17 +255,15 @@ export default function ContractsPage() {
                                                 {formatCurrency(contract.monthlyRent)}
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', gap: '6px' }}>
-                                                    <button
-                                                        className="btn btn-sm btn-secondary"
-                                                        onClick={() => {
-                                                            setSelectedContract(contract);
-                                                            setShowDetailModal(true);
-                                                        }}
-                                                    >
-                                                        {t?.viewDetails || 'View Details'}
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    className="btn btn-sm btn-secondary"
+                                                    onClick={() => {
+                                                        setSelectedContract(contract);
+                                                        setShowDetailModal(true);
+                                                    }}
+                                                >
+                                                    {t.contracts.btnViewDetails}
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -326,7 +281,7 @@ export default function ContractsPage() {
                                 borderTop: '1px solid var(--border-subtle)',
                             }}>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                    Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, contracts.length)} of {contracts.length}
+                                    {t.contracts.paginationShowing} {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, contracts.length)} {t.contracts.paginationOf} {contracts.length}
                                 </span>
                                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                                     <button
@@ -334,7 +289,7 @@ export default function ContractsPage() {
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
                                     >
-                                        ‹ Prev
+                                        {t.contracts.paginationPrev}
                                     </button>
                                     {Array.from({ length: Math.ceil(contracts.length / PAGE_SIZE) }, (_, i) => i + 1).map(page => (
                                         <button
@@ -356,7 +311,7 @@ export default function ContractsPage() {
                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(contracts.length / PAGE_SIZE), p + 1))}
                                         disabled={currentPage === Math.ceil(contracts.length / PAGE_SIZE)}
                                     >
-                                        Next ›
+                                        {t.contracts.paginationNext}
                                     </button>
                                 </div>
                             </div>
@@ -370,18 +325,18 @@ export default function ContractsPage() {
                 <div className="modal-overlay" onClick={() => !isUploading && setShowUploadModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Upload Contract PDF</h2>
+                            <h2>{t.contracts.modalUploadTitle}</h2>
                             <button className="modal-close" onClick={() => !isUploading && setShowUploadModal(false)} disabled={isUploading}>✕</button>
                         </div>
                         <form onSubmit={handleUpload}>
                             <div className="modal-body">
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Tenant Name *</label>
+                                        <label>{t.contracts.labelTenantName}</label>
                                         <input
                                             type="text"
                                             className="form-input"
-                                            placeholder="e.g. John Smith"
+                                            placeholder={t.contracts.placeholderName}
                                             value={uploadTenantName}
                                             onChange={(e) => setUploadTenantName(e.target.value)}
                                             required
@@ -389,11 +344,11 @@ export default function ContractsPage() {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Tenant Email</label>
+                                        <label>{t.contracts.labelTenantEmail}</label>
                                         <input
                                             type="email"
                                             className="form-input"
-                                            placeholder="e.g. john@example.com"
+                                            placeholder={t.contracts.placeholderEmail}
                                             value={uploadTenantEmail}
                                             onChange={(e) => setUploadTenantEmail(e.target.value)}
                                             disabled={isUploading}
@@ -402,11 +357,11 @@ export default function ContractsPage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Room Number *</label>
+                                        <label>{t.contracts.labelRoomNumber}</label>
                                         <input
                                             type="text"
                                             className="form-input"
-                                            placeholder="e.g. 101"
+                                            placeholder={t.contracts.placeholderRoom}
                                             value={uploadRoomNumber}
                                             onChange={(e) => setUploadRoomNumber(e.target.value)}
                                             required
@@ -414,11 +369,11 @@ export default function ContractsPage() {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Building Name *</label>
+                                        <label>{t.contracts.labelBuilding}</label>
                                         <input
                                             type="text"
                                             className="form-input"
-                                            placeholder="e.g. Block A"
+                                            placeholder={t.contracts.placeholderBuilding}
                                             value={uploadBuildingName}
                                             onChange={(e) => setUploadBuildingName(e.target.value)}
                                             required
@@ -428,11 +383,11 @@ export default function ContractsPage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Rent (VNĐ) *</label>
+                                        <label>{t.contracts.labelRent}</label>
                                         <input
                                             type="number"
                                             className="form-input"
-                                            placeholder="e.g. 8000"
+                                            placeholder={t.contracts.placeholderRent}
                                             min="0"
                                             value={uploadMonthlyRent}
                                             onChange={(e) => setUploadMonthlyRent(e.target.value)}
@@ -441,7 +396,7 @@ export default function ContractsPage() {
                                         />
                                     </div>
                                     <div className="form-group">
-                                        <label>Contract Type *</label>
+                                        <label>{t.contracts.labelContractType}</label>
                                         <select
                                             className="form-select"
                                             value={uploadType}
@@ -449,16 +404,14 @@ export default function ContractsPage() {
                                             required
                                             disabled={isUploading}
                                         >
-                                            <option value="RENTAL">Rental Agreement</option>
-                                            <option value="SALE">Sale Agreement</option>
-                                            <option value="MANAGEMENT">Management Agreement</option>
-                                            <option value="LEASE_EXTEND">Lease Extension</option>
-                                            <option value="SHORT_TERM">Short Term Rental</option>
+                                            {Object.entries(t.contracts.types).map(([val, label]) => (
+                                                <option key={val} value={val}>{label as string}</option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Main Contract PDF *</label>
+                                    <label>{t.contracts.labelMainPDF}</label>
                                     <div className="file-upload-zone" style={{
                                         border: '2px dashed var(--border-subtle)',
                                         borderRadius: 'var(--radius-md)',
@@ -482,13 +435,13 @@ export default function ContractsPage() {
                                         {uploadFile ? (
                                             <div style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>{uploadFile.name}</div>
                                         ) : (
-                                            <div style={{ color: 'var(--text-muted)' }}>Click to select Main PDF File</div>
+                                            <div style={{ color: 'var(--text-muted)' }}>{t.contracts.dropMainPDF}</div>
                                         )}
                                     </div>
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Product Detail File *</label>
+                                    <label>{t.contracts.labelProductPDF}</label>
                                     <div className="file-upload-zone" style={{
                                         border: '2px dashed var(--border-subtle)',
                                         borderRadius: 'var(--radius-md)',
@@ -512,13 +465,13 @@ export default function ContractsPage() {
                                         {uploadProductFile ? (
                                             <div style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>{uploadProductFile.name}</div>
                                         ) : (
-                                            <div style={{ color: 'var(--text-muted)' }}>Click to select Product Detail PDF *</div>
+                                            <div style={{ color: 'var(--text-muted)' }}>{t.contracts.dropProductPDF}</div>
                                         )}
                                     </div>
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowUploadModal(false)} disabled={isUploading}>Cancel</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowUploadModal(false)} disabled={isUploading}>{t.contracts.btnCancel}</button>
                                 <button
                                     type="submit"
                                     className="btn btn-primary"
@@ -532,7 +485,7 @@ export default function ContractsPage() {
                                         isUploading
                                     }
                                 >
-                                    {isUploading ? 'Uploading...' : 'Upload Contract'}
+                                    {isUploading ? t.contracts.btnUploading : t.contracts.btnUpload}
                                 </button>
                             </div>
                         </form>
@@ -545,7 +498,7 @@ export default function ContractsPage() {
                 <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
                     <div className="modal large" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>📄 Contract Details</h2>
+                            <h2>📄 {t.contracts.modalDetailTitle}</h2>
                             <button className="modal-close" onClick={() => setShowDetailModal(false)}>✕</button>
                         </div>
                         <div className="modal-body">
@@ -555,51 +508,53 @@ export default function ContractsPage() {
 
                                 {/* Tenant Info */}
                                 <div className="detail-section">
-                                    <div className="detail-section-title">👤 Tenant</div>
+                                    <div className="detail-section-title">{t.contracts.sectionTenant}</div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Name</div>
+                                        <div className="detail-field-label">{t.contracts.labelName}</div>
                                         <div className="detail-field-value">{selectedContract.person.name}</div>
                                     </div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Email</div>
+                                        <div className="detail-field-label">{t.contracts.labelEmail}</div>
                                         <div className={`detail-field-value${!selectedContract.person.email ? ' muted' : ''}`}>
-                                            {selectedContract.person.email || 'No email provided'}
+                                            {selectedContract.person.email || t.contracts.noEmail}
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Room Info */}
                                 <div className="detail-section">
-                                    <div className="detail-section-title">🏠 Room</div>
+                                    <div className="detail-section-title">{t.contracts.sectionRoom}</div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Room Number</div>
+                                        <div className="detail-field-label">{t.contracts.labelRoomNo}</div>
                                         <div className="detail-field-value">{selectedContract.room.number}</div>
                                     </div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Building</div>
+                                        <div className="detail-field-label">{t.contracts.labelBuildingName}</div>
                                         <div className="detail-field-value">{selectedContract.room.building.name}</div>
                                     </div>
                                 </div>
 
                                 {/* Contract Info */}
                                 <div className="detail-section">
-                                    <div className="detail-section-title">📋 Contract</div>
+                                    <div className="detail-section-title">{t.contracts.sectionContract}</div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Type</div>
+                                        <div className="detail-field-label">{t.contracts.labelType}</div>
                                         <div className="detail-field-value">
-                                            <span className={`badge ${typeBadge(selectedContract.type)}`}>{selectedContract.type}</span>
-                                        </div>
-                                    </div>
-                                    <div className="detail-field">
-                                        <div className="detail-field-label">Status</div>
-                                        <div className="detail-field-value">
-                                            <span className={`badge ${statusBadge(selectedContract.status)}`}>
-                                                {selectedContract.status}
+                                            <span className={`badge ${typeBadge(selectedContract.type)}`}>
+                                                {t.contracts.types[selectedContract.type as keyof typeof t.contracts.types] || selectedContract.type}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Upload Date</div>
+                                        <div className="detail-field-label">{t.contracts.labelStatus}</div>
+                                        <div className="detail-field-value">
+                                            <span className={`badge ${statusBadge(selectedContract.status)}`}>
+                                                {t.contracts.statuses[selectedContract.status as keyof typeof t.contracts.statuses] || selectedContract.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="detail-field">
+                                        <div className="detail-field-label">{t.contracts.labelUploadDate}</div>
                                         <div className="detail-field-value">
                                             {formatDate(selectedContract.createdAt)}
                                         </div>
@@ -608,9 +563,9 @@ export default function ContractsPage() {
 
                                 {/* Financial Info */}
                                 <div className="detail-section">
-                                    <div className="detail-section-title">💰 Financials</div>
+                                    <div className="detail-section-title">{t.contracts.sectionFinancials}</div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">Rent</div>
+                                        <div className="detail-field-label">{t.contracts.labelRentAmount}</div>
                                         <div className="detail-field-value" style={{ fontWeight: 700, fontSize: '1rem' }}>
                                             {formatCurrency(selectedContract.monthlyRent)}
                                         </div>
@@ -622,7 +577,7 @@ export default function ContractsPage() {
                             {/* ── Attached Documents ── */}
                             <div>
                                 <div className="detail-section-title" style={{ marginBottom: '12px' }}>
-                                    📎 Main Contract ({selectedContract.documents.length})
+                                    📎 {t.contracts.labelMainDoc} ({selectedContract.documents.length})
                                 </div>
                                 {selectedContract.documents.length === 0 ? (
                                     <div style={{
@@ -634,34 +589,26 @@ export default function ContractsPage() {
                                         borderRadius: 'var(--radius-md)',
                                         fontSize: '0.875rem',
                                     }}>
-                                        No documents attached to this contract.
+                                        {t.contracts.labelNoDocs}
                                     </div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         {/* Main Contract Group */}
                                         {selectedContract.documents.filter(d => d.documentType === 'CONTRACT').map((doc) => (
                                             <Fragment key={doc.id}>
-                                                <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '14px 16px',
-                                                background: 'var(--bg-card)',
-                                                border: '1px solid var(--border-subtle)',
-                                                borderRadius: 'var(--radius-md)',
-                                            }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div className="doc-row">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📄</span>
-                                                    <div>
-                                                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{doc.originalName}</div>
+                                                    <div style={{ minWidth: 0 }}>
+                                                        <div style={{ fontWeight: 600, fontSize: '0.875rem', wordBreak: 'break-all' }}>{doc.originalName}</div>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                                            {(doc.fileSize / (1024 * 1024)).toFixed(2)} MB · Uploaded {formatDate(doc.createdAt)}
+                                                            {(doc.fileSize / (1024 * 1024)).toFixed(2)} {t.contracts.labelMB} · {t.contracts.labelUploaded} {formatDate(doc.createdAt)}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div className="doc-actions">
                                                     <span className={`badge ${approvalBadge(doc.approvalStatus)}`}>
-                                                        {doc.approvalStatus}
+                                                        {t.contracts.approvals[doc.approvalStatus as keyof typeof t.contracts.approvals] || doc.approvalStatus}
                                                     </span>
                                                     <button
                                                         className="btn btn-sm btn-secondary"
@@ -669,14 +616,14 @@ export default function ContractsPage() {
                                                             setPreviewDocId(prev => prev === doc.id ? null : doc.id);
                                                         }}
                                                     >
-                                                        {previewDocId === doc.id ? '▲ Hide Preview' : '👁 Preview'}
+                                                        {previewDocId === doc.id ? t.contracts.btnHidePreview : t.contracts.btnShowPreview}
                                                     </button>
                                                     <a
                                                         href={doc.fileUrl}
                                                         download={doc.originalName}
                                                         className="btn btn-sm btn-secondary"
                                                     >
-                                                        ⬇ Download
+                                                        {t.contracts.btnDownload}
                                                     </a>
                                                 </div>
                                             </div>
@@ -702,37 +649,29 @@ export default function ContractsPage() {
                                         {/* Product Detail Group */}
                                         {selectedContract.documents.some(d => d.documentType === 'PRODUCT_DETAIL') && (
                                             <div style={{ marginTop: '10px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', paddingLeft: '4px' }}>
-                                                Product Detail Documents
+                                                {t.contracts.labelProductDoc}
                                             </div>
                                         )}
                                         {selectedContract.documents.filter(d => d.documentType === 'PRODUCT_DETAIL').map((doc) => (
                                             <Fragment key={doc.id}>
-                                                <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '14px 16px',
-                                                background: 'var(--bg-card)',
-                                                border: '1px solid var(--border-subtle)',
-                                                borderRadius: 'var(--radius-md)',
-                                            }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div className="doc-row">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                                                     <span style={{ fontSize: '1.25rem' }}>📎</span>
-                                                    <div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{doc.originalName}</div>
+                                                    <div style={{ minWidth: 0 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                            <div style={{ fontWeight: 600, fontSize: '0.875rem', wordBreak: 'break-all' }}>{doc.originalName}</div>
                                                             <span className="badge amber" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
-                                                                Product Detail
+                                                                {t.contracts.labelProductDoc}
                                                             </span>
                                                         </div>
                                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                                                            {(doc.fileSize / (1024 * 1024)).toFixed(2)} MB · Uploaded {formatDate(doc.createdAt)}
+                                                            {(doc.fileSize / (1024 * 1024)).toFixed(2)} {t.contracts.labelMB} · {t.contracts.labelUploaded} {formatDate(doc.createdAt)}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div className="doc-actions">
                                                     <span className={`badge ${approvalBadge(doc.approvalStatus)}`}>
-                                                        {doc.approvalStatus}
+                                                        {t.contracts.approvals[doc.approvalStatus as keyof typeof t.contracts.approvals] || doc.approvalStatus}
                                                     </span>
                                                     <button
                                                         className="btn btn-sm btn-secondary"
@@ -740,14 +679,14 @@ export default function ContractsPage() {
                                                             setPreviewDocId(prev => prev === doc.id ? null : doc.id);
                                                         }}
                                                     >
-                                                        {previewDocId === doc.id ? '▲ Hide Preview' : '👁 Preview'}
+                                                        {previewDocId === doc.id ? t.contracts.btnHidePreview : t.contracts.btnShowPreview}
                                                     </button>
                                                     <a
                                                         href={doc.fileUrl}
                                                         download={doc.originalName}
                                                         className="btn btn-sm btn-secondary"
                                                     >
-                                                        ⬇ Download
+                                                        {t.contracts.btnDownload}
                                                     </a>
                                                 </div>
                                             </div>
@@ -777,7 +716,7 @@ export default function ContractsPage() {
                         {/* ── Footer ── */}
                         <div className="modal-footer">
                             <button className="btn btn-primary" onClick={() => { setShowDetailModal(false); setPreviewDocId(null); }}>
-                                Close
+                                {t.contracts.btnClose}
                             </button>
                         </div>
                     </div>

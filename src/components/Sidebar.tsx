@@ -2,35 +2,37 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const { lang, setLang, t } = useLanguage();
 
     const navItems = [
         {
-            section: 'Overview',
+            section: lang === 'vi' ? 'Tổng quan' : 'Overview',
             items: [
-                { href: '/', label: 'Dashboard', icon: '📊' },
-                { href: '/hierarchy', label: 'Organization', icon: '🌲' },
+                { href: '/', label: t.navDashboard, icon: '📊' },
+                { href: '/hierarchy', label: t.navOrganization, icon: '🌲' },
             ]
         },
         {
-            section: 'Operations',
+            section: lang === 'vi' ? 'Vận hành' : 'Operations',
             items: [
-                { href: '/interactions', label: 'Interactions', icon: '💬', badge: 'Hub' },
-                { href: '/leads', label: 'Lead Pipeline', icon: '🎯' },
-                { href: '/rooms', label: 'Room Status', icon: '🏠' },
-                { href: '/properties', label: 'Properties', icon: '🏢' },
-                { href: '/contracts', label: 'Contracts', icon: '📄' },
-                { href: '/invoices', label: 'Invoices', icon: '💰' },
-                { href: '/maintenance', label: 'Maintenance', icon: '🔧' },
-                { href: '/utilities', label: 'Utilities', icon: '⚡' },
+                { href: '/interactions', label: t.navInteractions, icon: '💬', badge: 'Hub' },
+                { href: '/leads', label: t.navLeads, icon: '🎯' },
+                { href: '/rooms', label: t.navRooms, icon: '🏠' },
+                { href: '/properties', label: t.navProperties, icon: '🏢' },
+                { href: '/contracts', label: t.navContracts, icon: '📄' },
+                { href: '/invoices', label: t.navInvoices, icon: '💰' },
+                { href: '/maintenance', label: t.navMaintenance, icon: '🔧' },
+                { href: '/utilities', label: t.navUtilities, icon: '⚡' },
             ]
         },
         {
-            section: 'Analytics',
+            section: lang === 'vi' ? 'Phân tích' : 'Analytics',
             items: [
-                { href: '/reports', label: 'Financial Reports', icon: '📈' },
+                { href: '/reports', label: t.navReports, icon: '📈' },
             ]
         },
     ];
@@ -59,8 +61,69 @@ export default function Sidebar() {
                     </div>
                 ))}
             </nav>
-            <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                API-First · Multi-Tenant Ready
+            
+            <div style={{ padding: '24px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize: '0.65rem', marginBottom: '12px', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
+                    {t.language}
+                </div>
+                
+                {/* Modern Premium Language Switcher */}
+                <div style={{ 
+                    display: 'flex', 
+                    padding: '2px', 
+                    background: 'rgba(26, 32, 53, 0.8)', 
+                    borderRadius: '10px',
+                    border: '1px solid var(--border-subtle)',
+                }}>
+                    <button 
+                        onClick={() => setLang('vi')}
+                        style={{ 
+                            flex: 1,
+                            cursor: 'pointer', 
+                            border: 'none', 
+                            background: lang === 'vi' ? 'var(--accent-blue)' : 'transparent',
+                            color: lang === 'vi' ? '#fff' : 'var(--text-muted)',
+                            borderRadius: '8px',
+                            padding: '6px 0',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            transition: 'all 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px'
+                        }}
+                    >
+                        <span style={{ filter: lang === 'vi' ? 'none' : 'grayscale(100%) opacity(0.5)' }}>🇻🇳</span>
+                        VN
+                    </button>
+                    <button 
+                        onClick={() => setLang('en')}
+                        style={{ 
+                            flex: 1,
+                            cursor: 'pointer', 
+                            border: 'none', 
+                            background: lang === 'en' ? 'var(--accent-blue)' : 'transparent',
+                            color: lang === 'en' ? '#fff' : 'var(--text-muted)',
+                            borderRadius: '8px',
+                            padding: '6px 0',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            transition: 'all 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px'
+                        }}
+                    >
+                        <span style={{ filter: lang === 'en' ? 'none' : 'grayscale(100%) opacity(0.5)' }}>🇬🇧</span>
+                        EN
+                    </button>
+                </div>
+
+                <div style={{ marginTop: '16px', fontSize: '0.65rem', color: 'var(--text-muted)', opacity: 0.8 }}>
+                    API-First · Multi-Tenant
+                </div>
             </div>
         </aside>
     );
