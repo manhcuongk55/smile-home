@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface MaintenanceTicket {
     id: string;
@@ -42,6 +43,8 @@ export default function MaintenancePage() {
         priority: 'MEDIUM',
     });
     const [toastMsg, setToastMsg] = useState('');
+    const { t } = useLanguage();
+
 
     useEffect(() => {
         fetchTickets();
@@ -78,7 +81,7 @@ export default function MaintenancePage() {
             if (res.ok) {
                 setShowCreateModal(false);
                 setNewTicket({ roomId: '', reportedById: '', title: '', description: '', priority: 'MEDIUM' });
-                setToastMsg('Maintenance ticket created!');
+                setToastMsg(t('ticketCreated'));
                 fetchTickets();
                 setTimeout(() => setToastMsg(''), 3000);
             }
@@ -105,11 +108,11 @@ export default function MaintenancePage() {
         <>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h1>Maintenance & Repairs</h1>
-                    <p>Track and resolve property infrastructure issues</p>
+                    <h1>{t('maintenanceTitle')}</h1>
+                    <p>{t('maintenanceSubtitle')}</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
-                    🔧 New Ticket
+                    🔧 {t('newTicket')}
                 </button>
             </div>
 
@@ -117,21 +120,21 @@ export default function MaintenancePage() {
                 {tickets.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">🔧</div>
-                        <h3>No tickets found</h3>
-                        <p>Create a maintenance ticket to start tracking repairs.</p>
+                        <h3>{t('noTickets')}</h3>
+                        <p>{t('createTicketToStart')}</p>
                     </div>
                 ) : (
                     <div className="table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>Ticket Info</th>
-                                    <th>Location</th>
-                                    <th>Priority</th>
-                                    <th>Status</th>
-                                    <th>Reported By</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
+                                    <th>{t('ticketInfo')}</th>
+                                    <th>{t('location')}</th>
+                                    <th>{t('priority')}</th>
+                                    <th>{t('status')}</th>
+                                    <th>{t('reportedBy')}</th>
+                                    <th>{t('created')}</th>
+                                    <th>{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -158,7 +161,7 @@ export default function MaintenancePage() {
                                         <td style={{ fontSize: '0.85rem' }}>{ticket.reportedBy.name}</td>
                                         <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatDate(ticket.createdAt)}</td>
                                         <td>
-                                            <button className="btn btn-sm btn-secondary">Manage</button>
+                                            <button className="btn btn-sm btn-secondary">{t('manage')}</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -172,16 +175,16 @@ export default function MaintenancePage() {
                 <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>Submit Maintenance Ticket</h2>
+                            <h2>{t('submitTicketModal')}</h2>
                             <button className="modal-close" onClick={() => setShowCreateModal(false)}>✕</button>
                         </div>
                         <form onSubmit={handleCreate}>
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label>Title *</label>
+                                    <label>{t('titleLabel')}</label>
                                     <input
                                         className="form-input"
-                                        placeholder="Brief summary of the issue"
+                                        placeholder={t('titlePlaceholder') as string}
                                         value={newTicket.title}
                                         onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
                                         required
@@ -189,28 +192,28 @@ export default function MaintenancePage() {
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label>Room *</label>
+                                        <label>{t('roomLabel')}</label>
                                         <select
                                             className="form-select"
                                             value={newTicket.roomId}
                                             onChange={(e) => setNewTicket({ ...newTicket, roomId: e.target.value })}
                                             required
                                         >
-                                            <option value="">Select a room...</option>
+                                            <option value="">{t('selectRoom')}</option>
                                             {rooms.map((r) => (
                                                 <option key={r.id} value={r.id}>{r.building.name} - {r.number}</option>
                                             ))}
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label>Reported By *</label>
+                                        <label>{t('reportedBy')} *</label>
                                         <select
                                             className="form-select"
                                             value={newTicket.reportedById}
                                             onChange={(e) => setNewTicket({ ...newTicket, reportedById: e.target.value })}
                                             required
                                         >
-                                            <option value="">Select a person...</option>
+                                            <option value="">{t('selectPerson')}</option>
                                             {persons.map((p) => (
                                                 <option key={p.id} value={p.id}>{p.name}</option>
                                             ))}
@@ -218,23 +221,23 @@ export default function MaintenancePage() {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Priority</label>
+                                    <label>{t('priority')}</label>
                                     <select
                                         className="form-select"
                                         value={newTicket.priority}
                                         onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
                                     >
-                                        <option value="LOW">Low</option>
-                                        <option value="MEDIUM">Medium</option>
-                                        <option value="HIGH">High</option>
-                                        <option value="URGENT">Urgent</option>
+                                        <option value="LOW">{t('low')}</option>
+                                        <option value="MEDIUM">{t('medium')}</option>
+                                        <option value="HIGH">{t('high')}</option>
+                                        <option value="URGENT">{t('urgent')}</option>
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Description *</label>
+                                    <label>{t('descriptionLabel')}</label>
                                     <textarea
                                         className="form-textarea"
-                                        placeholder="Detailed description of the problem..."
+                                        placeholder={t('descriptionPlaceholder') as string}
                                         value={newTicket.description}
                                         onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
                                         required
@@ -242,8 +245,8 @@ export default function MaintenancePage() {
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">Submit Ticket</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>{t('cancel')}</button>
+                                <button type="submit" className="btn btn-primary">{t('submitTicket')}</button>
                             </div>
                         </form>
                     </div>
