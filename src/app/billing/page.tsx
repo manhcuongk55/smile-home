@@ -110,7 +110,7 @@ export default function BillingPage() {
                             <tr key={inv.id}>
                                 <td style={{ fontWeight: 'bold' }}>{inv.invoiceNumber}</td>
                                 <td>{inv.contract.person.name}</td>
-                                <td>{inv.contract.room.number} ({inv.contract.room.building.name})</td>
+                                <td>{inv.contract.room?.number} ({inv.contract.room?.building?.name})</td>
                                 <td style={{ fontWeight: 'bold' }}>${inv.amount.toLocaleString()}</td>
                                 <td>{formatDate(inv.dueDate)}</td>
                                 <td>

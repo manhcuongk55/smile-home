@@ -7,7 +7,9 @@ export async function GET(request: NextRequest) {
             contract: {
                 include: {
                     person: true,
-                    room: true
+                    room: {
+                        include: { building: true }
+                    }
                 }
             }
         },
