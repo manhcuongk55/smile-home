@@ -123,7 +123,7 @@ export default function LeadsPage() {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div className="lead-name">{lead.name}</div>
                                             {new Date().getTime() - new Date(lead.updatedAt).getTime() > 3 * 24 * 60 * 60 * 1000 && (
-                                                <span title="Stale: No activity for >3 days" style={{ cursor: 'help', fontSize: '0.9rem' }}>⚠️</span>
+                                                <span title="Stale: No activity for &gt;3 days" style={{ cursor: 'help', fontSize: '0.9rem' }}>⚠️</span>
                                             )}
                                         </div>
                                         <div className="lead-info">
