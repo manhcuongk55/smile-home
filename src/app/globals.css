@@ -1244,6 +1244,45 @@ a:hover {
   justify-content: space-between;
 }
 
+/* ── Document Actions Responsive ── */
+.doc-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .doc-actions {
+    flex-direction: column;
+    align-items: stretch; /* Modified to stretch to fill width */
+    gap: 8px;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  .doc-actions .badge {
+    align-self: flex-start;
+  }
+
+  .doc-actions .btn, 
+  .doc-actions a.btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.doc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  gap: 12px;
+}
+
 /* Print Styles */
 @media print {
   .sidebar, .page-header button, .view-all, .btn, .search-overlay, .nav-section-label {
