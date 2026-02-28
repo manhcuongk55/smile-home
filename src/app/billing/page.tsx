@@ -9,6 +9,7 @@ interface Invoice {
     dueDate: string;
     status: string;
     contract: {
+        personId: string;
         person: { name: string; email?: string };
         room: { number: string; building: { name: string } };
     };
