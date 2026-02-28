@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
                 include: { building: true }
             },
             person: true,
+            documents: {
+                orderBy: { createdAt: 'desc' },
+            },
         },
         orderBy: { createdAt: 'desc' },
     });
