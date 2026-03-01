@@ -16,6 +16,12 @@ interface MaintenanceTicket {
     reportedBy: {
         name: string;
     };
+    assignedTo?: {
+        name: string;
+    } | null;
+    cost: number;
+    startedAt?: string | null;
+    completedAt?: string | null;
     createdAt: string;
 }
 
@@ -132,6 +138,8 @@ export default function MaintenancePage() {
                                     <th>{t('location')}</th>
                                     <th>{t('priority')}</th>
                                     <th>{t('status')}</th>
+                                    <th>{t('contractor' as any)}</th>
+                                    <th>{t('cost' as any)}</th>
                                     <th>{t('reportedBy')}</th>
                                     <th>{t('created')}</th>
                                     <th>{t('actions')}</th>
@@ -157,6 +165,18 @@ export default function MaintenancePage() {
                                         </td>
                                         <td>
                                             <span className="badge blue">{ticket.status}</span>
+                                        </td>
+                                        <td style={{ fontSize: '0.85rem' }}>
+                                            {ticket.assignedTo ? (
+                                                <span style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>
+                                                    🛠️ {ticket.assignedTo.name}
+                                                </span>
+                                            ) : (
+                                                <span style={{ opacity: 0.4, fontStyle: 'italic' }}>{t('unassigned' as any)}</span>
+                                            )}
+                                        </td>
+                                        <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                                            {ticket.cost > 0 ? `฿${ticket.cost.toLocaleString()}` : '—'}
                                         </td>
                                         <td style={{ fontSize: '0.85rem' }}>{ticket.reportedBy.name}</td>
                                         <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatDate(ticket.createdAt)}</td>

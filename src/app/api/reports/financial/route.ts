@@ -11,6 +11,21 @@ export async function GET(request: NextRequest) {
             }
         });
 
+        const expenses = await prisma.expense.findMany({
+            where: { status: 'PAID' },
+            select: {
+                amount: true,
+                date: true,
+                category: true,
+            }
+        });
+
+        const properties = await prisma.property.findMany({
+            select: {
+                valuation: true,
+            }
+        });
+
         // Group by month
         const revenueByMonth: Record<string, number> = {};
         let totalRevenue = 0;
@@ -30,11 +45,47 @@ export async function GET(request: NextRequest) {
         // Get occupancy stats too
         const totalRooms = await prisma.room.count();
         const occupiedRooms = await prisma.room.count({ where: { status: 'OCCUPIED' } });
-        const totalInvoices = await prisma.invoice.count();
+
+        // Get detailed invoice stats
+        const allInvoices = await prisma.invoice.findMany({
+            select: { status: true, amount: true, dueDate: true }
+        });
+
+        const statusCounts: Record<string, number> = {};
+        const statusAmounts: Record<string, number> = {};
+        let overdueAmount = 0;
+        let overdueCount = 0;
+        const now = new Date();
+
+        allInvoices.forEach(inv => {
+            let status = inv.status;
+            if (status === 'PENDING' && new Date(inv.dueDate) < now) {
+                status = 'OVERDUE';
+                overdueAmount += inv.amount;
+                overdueCount++;
+            }
+            statusCounts[status] = (statusCounts[status] || 0) + 1;
+            statusAmounts[status] = (statusAmounts[status] || 0) + inv.amount;
+        });
+
+        const totalExpenses = expenses.reduce((sum: number, exp: { amount: number }) => sum + exp.amount, 0);
+        const netIncome = totalRevenue - totalExpenses;
+
+        const totalValuation = properties.reduce((sum: number, prop: { valuation: number }) => sum + prop.valuation, 0);
+        const portfolioYield = totalValuation > 0 ? (netIncome / totalValuation) * 100 : 0;
 
         return NextResponse.json({
             totalRevenue,
-            totalInvoices,
+            totalExpenses,
+            netIncome,
+            portfolioYield,
+            totalValuation,
+            totalInvoices: allInvoices.length,
+            statusCounts,
+            statusAmounts,
+            pendingAmount: statusAmounts['PENDING'] || 0,
+            overdueAmount,
+            verifiedRevenue: statusAmounts['VERIFIED'] || 0,
             monthlyRevenue: chartData,
             occupancyRate: totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0
         });

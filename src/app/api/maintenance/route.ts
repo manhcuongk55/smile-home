@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
                 include: { building: true }
             },
             reportedBy: true,
+            assignedTo: true,
         },
         orderBy: { createdAt: 'desc' },
     });

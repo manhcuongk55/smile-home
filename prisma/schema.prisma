@@ -11,14 +11,16 @@ datasource db {
 }
 
 model Property {
-  id        String     @id @default(cuid())
-  name      String
-  address   String
-  type      String     @default("RESIDENTIAL") // RESIDENTIAL, COMMERCIAL, MIXED
-  tenantId  String     @default("default")
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  buildings Building[]
+  id              String     @id @default(cuid())
+  name            String
+  address         String
+  type            String     @default("RESIDENTIAL") // RESIDENTIAL, COMMERCIAL, MIXED
+  valuation       Float      @default(0) // For yield calculations
+  tenantId        String     @default("default")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  buildings       Building[]
+  expenses        Expense[]
 }
 
 model Building {
@@ -56,7 +58,7 @@ model Person {
   name       String
   email      String?
   phone      String?
-  role       String   @default("LEAD") // TENANT, LEAD, OWNER, INVESTOR, STAFF
+  role       String   @default("LEAD") // TENANT, LEAD, OWNER, INVESTOR, STAFF, CONTRACTOR
   leadStatus String?  // NEW, CONTACTED, VIEWING_SCHEDULED, NEGOTIATING, CONVERTED, LOST
   
   // Sales & Hierarchy Fields
@@ -73,6 +75,7 @@ model Person {
   contracts          Contract[]
   interactions       Interaction[]
   maintenanceTickets MaintenanceTicket[]
+  assignedTickets    MaintenanceTicket[] @relation("AssignedTo")
   messages           Message[]
 }
 
@@ -182,11 +185,19 @@ model MaintenanceTicket {
   room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   reportedById String
   reportedBy   Person   @relation(fields: [reportedById], references: [id], onDelete: Cascade)
+  
+  assignedToId String?
+  assignedTo   Person?   @relation("AssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  
   title        String
   description  String
   priority     String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
   status       String   @default("DRAFT") // DRAFT, OPEN, ASSIGNED, IN_PROGRESS, COMPLETED, CONFIRMED, CLOSED
   
+  cost         Float    @default(0)
+  startedAt    DateTime?
+  completedAt  DateTime?
+
   // HITL Fields
   aiGenerated   Boolean  @default(false)
   aiConfidence  Float?
@@ -194,6 +205,20 @@ model MaintenanceTicket {
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  category    String   @default("MAINTENANCE") // UTILITY, TAX, INSURANCE, MAINTENANCE, SALARY, OTHER
+  amount      Float
+  date        DateTime @default(now())
+  status      String   @default("PENDING") // PENDING, PAID
+  description String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model UtilityMeter {

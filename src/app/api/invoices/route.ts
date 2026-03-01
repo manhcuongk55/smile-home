@@ -11,6 +11,9 @@ export async function GET(request: NextRequest) {
                         include: { building: true }
                     }
                 }
+            },
+            interactions: {
+                orderBy: { createdAt: 'desc' }
             }
         },
         orderBy: { issuedDate: 'desc' },
