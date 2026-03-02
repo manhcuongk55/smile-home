@@ -15,8 +15,10 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const [lang, setLangState] = useState<Language>('vi');
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const savedLang = localStorage.getItem('smile-home-lang') as Language;
         if (savedLang && (savedLang === 'en' || savedLang === 'vi')) {
             setLangState(savedLang);
@@ -28,10 +30,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('smile-home-lang', newLang);
     };
 
-    const t = translations[lang];
+    // Always use 'vi' during SSR and initial hydration to match server output
+    const activeLang = mounted ? lang : 'vi';
+    const t = translations[activeLang];
 
     return (
-        <LanguageContext.Provider value={{ lang, setLang, t }}>
+        <LanguageContext.Provider value={{ lang: activeLang, setLang, t }}>
             {children}
         </LanguageContext.Provider>
     );
