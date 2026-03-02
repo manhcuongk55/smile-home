@@ -42,8 +42,7 @@ export async function POST(req: Request) {
         const typeRaw = (formData.get('type') as string | null)?.trim() || 'RENTAL';
         const startDateRaw = formData.get('startDate') as string | null;
         const endDateRaw = formData.get('endDate') as string | null;
-        const VALID_TYPES = ['RENTAL', 'SALE', 'MANAGEMENT', 'LEASE_EXTEND', 'SHORT_TERM'];
-        const contractType = VALID_TYPES.includes(typeRaw) ? typeRaw : 'RENTAL';
+        const contractType = typeRaw;
 
         // ── Validation ────────────────────────────────────────────────────────
         if (!file || !productFile) {

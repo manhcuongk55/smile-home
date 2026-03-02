@@ -109,6 +109,7 @@ export default function ContractsPage() {
     const [uploadBuildingName, setUploadBuildingName] = useState('');
     const [uploadMonthlyRent, setUploadMonthlyRent] = useState('');
     const [uploadType, setUploadType] = useState('RENTAL');
+    const [uploadCustomType, setUploadCustomType] = useState('');
     const [uploadProductFile, setUploadProductFile] = useState<File | null>(null);
     const [uploadProductName, setUploadProductName] = useState('');
     const [uploadProductArea, setUploadProductArea] = useState('');
@@ -157,7 +158,7 @@ export default function ContractsPage() {
         formData.append('roomNumber', uploadRoomNumber.trim());
         formData.append('buildingName', uploadBuildingName.trim());
         formData.append('monthlyRent', uploadMonthlyRent);
-        formData.append('type', uploadType);
+        formData.append('type', uploadType === 'OTHER' ? uploadCustomType.trim() : uploadType);
         formData.append('productName', uploadProductName.trim());
         formData.append('productArea', uploadProductArea.trim());
         if (uploadProductFile) {
@@ -178,6 +179,7 @@ export default function ContractsPage() {
                 setUploadBuildingName('');
                 setUploadMonthlyRent('');
                 setUploadType('RENTAL');
+                setUploadCustomType('');
                 setUploadProductName('');
                 setUploadProductArea('');
                 setUploadProductFile(null);
@@ -459,12 +461,31 @@ export default function ContractsPage() {
                                             required
                                             disabled={isUploading}
                                         >
-                                            {Object.entries(t.contracts.types).map(([val, label]) => (
-                                                <option key={val} value={val}>{label as string}</option>
-                                            ))}
+                                            <option value="RENTAL">{t.contracts.types.RENTAL}</option>
+                                            <option value="SALE">{t.contracts.types.SALE}</option>
+                                            <option value="MANAGEMENT">{t.contracts.types.MANAGEMENT}</option>
+                                            <option value="LEASE_EXTEND">{t.contracts.types.LEASE_EXTEND}</option>
+                                            <option value="SHORT_TERM">{t.contracts.types.SHORT_TERM}</option>
+                                            <option value="OTHER">{t.contracts.types.OTHER}</option>
                                         </select>
                                     </div>
                                 </div>
+
+                                {uploadType === 'OTHER' && (
+                                    <div className="form-group" style={{ marginBottom: '16px' }}>
+                                        <label>{t.contracts.labelContractType} ({t.contracts.types.OTHER})</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder={t.contracts.placeholderCustomType}
+                                            value={uploadCustomType}
+                                            onChange={(e) => setUploadCustomType(e.target.value)}
+                                            required={uploadType === 'OTHER'}
+                                            disabled={isUploading}
+                                        />
+                                    </div>
+                                )}
+
                                 <div className="form-group">
                                     <label>{t.contracts.labelMainPDF}</label>
                                     <div className="file-upload-zone" style={{
