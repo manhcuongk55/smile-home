@@ -129,7 +129,7 @@ export async function POST(req: Request) {
                 personId: person.id,
                 roomId: room.id,
                 type: contractType,
-                status: 'DRAFT',
+                status: 'PENDING',
                 startDate: startDateRaw ? new Date(startDateRaw) : new Date(),
                 endDate: endDateRaw ? new Date(endDateRaw) : new Date(),
                 monthlyRent: parsedMonthlyRent,

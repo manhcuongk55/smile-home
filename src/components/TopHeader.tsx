@@ -7,7 +7,7 @@ export default function TopHeader() {
     const { lang, setLang } = useLanguage();
 
     return (
-        <header style={{
+        <header className="top-header" style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',

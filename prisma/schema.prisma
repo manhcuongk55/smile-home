@@ -135,12 +135,16 @@ model Contract {
   deposit     Float    @default(0)
   productName String?
   productArea String?
+  reviewNote  String?
+  reviewedBy  String?
+  reviewedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   invoices     Invoice[]
   interactions Interaction[]
   documents    ContractDocument[]
+  reviewHistories ContractReviewHistory[]
 }
 
 model Invoice {
@@ -258,4 +262,15 @@ model ContractDocument {
   approvalStatus   String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model ContractReviewHistory {
+  id           String   @id @default(uuid())
+  contractId   String
+  fromStatus   String
+  toStatus     String
+  reviewedBy   String
+  reviewedAt   DateTime @default(now())
+  note         String?
+  contract     Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 }

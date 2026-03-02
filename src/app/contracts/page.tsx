@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
+import useSWR from 'swr';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -32,6 +33,9 @@ interface Contract {
     deposit: number;
     productName?: string;
     productArea?: string;
+    reviewNote?: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
     createdAt: string;
     documents: ContractDocument[];
 }
@@ -67,8 +71,9 @@ function formatCurrency(amount: number) {
 
 function statusBadge(status: string) {
     if (status === 'ACTIVE') return 'emerald';
-    if (status === 'DRAFT') return 'amber';
-    return 'rose';
+    if (status === 'DRAFT' || status === 'PENDING') return 'amber';
+    if (status === 'REJECTED') return 'rose';
+    return 'slate';
 }
 
 function typeBadge(type: string) {
@@ -95,10 +100,15 @@ const VIETNAM_PROVINCES = [
     'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau', 'Cần Thơ', 'Cao Bằng', 'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương', 'Hải Phòng', 'Hậu Giang', 'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'TP Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
 ];
 
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 export default function ContractsPage() {
     const { t } = useLanguage();
-    const [contracts, setContracts] = useState<Contract[]>([]);
-
+    const { data, mutate } = useSWR<Contract[]>('/api/contracts', fetcher, {
+        revalidateOnFocus: true,
+        revalidateOnReconnect: true
+    });
+    const contracts = data || [];
 
     // Upload modal
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -127,19 +137,27 @@ export default function ContractsPage() {
     // Toast
     const [toastMsg, setToastMsg] = useState('');
     const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        fetchContracts();
-    }, []);
+    // Rejection details modal
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectDetails, setRejectDetails] = useState<{
+        note?: string;
+        by?: string;
+        at?: string;
+    } | null>(null);
 
-    // ── Fetchers ───────────────────────────────────────────────────────────────
-
-    async function fetchContracts() {
-        const res = await fetch('/api/contracts');
-        const data = await res.json();
-        setContracts(Array.isArray(data) ? data : []);
-        setCurrentPage(1);
-    }
+    const filteredContracts = contracts.filter(c => {
+        const matchesArea = selectedAreas.length === 0 || selectedAreas.includes(c.productArea || '');
+        const query = searchTerm.toLowerCase();
+        const matchesSearch = !searchTerm || 
+            c.person.name.toLowerCase().includes(query) ||
+            (c.person.email || '').toLowerCase().includes(query) ||
+            c.room.number.toLowerCase().includes(query) ||
+            (c.productName || '').toLowerCase().includes(query);
+        
+        return matchesArea && matchesSearch;
+    });
 
 
     // ── Handlers ───────────────────────────────────────────────────────────────
@@ -184,7 +202,7 @@ export default function ContractsPage() {
                 setUploadProductArea('');
                 setUploadProductFile(null);
                 setToastMsg(t.contracts.toastSuccess);
-                fetchContracts();
+                mutate();
                 setSelectedAreas([]);
                 setTimeout(() => setToastMsg(''), 3000);
             } else {
@@ -210,6 +228,27 @@ export default function ContractsPage() {
                     <p>{t.contracts.pageSubtitle}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="search-input-wrapper" style={{ position: 'relative', width: '300px' }}>
+                        <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
+                        <input 
+                            type="text"
+                            placeholder={t.contracts.searchPlaceholder}
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            style={{
+                                width: '100%',
+                                padding: '8px 12px 8px 36px',
+                                background: 'var(--bg-card)',
+                                border: '1px solid var(--border-subtle)',
+                                borderRadius: 'var(--radius-sm)',
+                                color: 'var(--text-primary)',
+                                fontSize: '0.875rem'
+                            }}
+                        />
+                    </div>
                     <FilterArea 
                         options={VIETNAM_PROVINCES}
                         selectedValues={selectedAreas}
@@ -250,63 +289,102 @@ export default function ContractsPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {contracts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((contract) => (
-                                        <tr key={contract.id}>
-                                            <td>
-                                                <div style={{ fontWeight: 600 }}>{contract.person.name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                    {contract.person.email || '—'}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div style={{ fontWeight: 600 }}>{contract.productName || '—'}</div>
-                                            </td>
-                                            <td>
-                                                <div style={{ fontWeight: 600 }}>{contract.productArea || '—'}</div>
-                                            </td>
-                                            <td>
-                                                <div style={{ fontWeight: 600 }}>{contract.room.number}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                    {contract.room.building.name}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span className={`badge ${typeBadge(contract.type)}`}>
-                                                    {t.contracts.types[contract.type as keyof typeof t.contracts.types] || contract.type}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className={`badge ${statusBadge(contract.status)}`}>
-                                                    {t.contracts.statuses[contract.status as keyof typeof t.contracts.statuses] || contract.status}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div style={{ fontSize: '0.85rem' }}>
-                                                    {formatDate(contract.createdAt)}
-                                                </div>
-                                            </td>
-                                            <td style={{ fontWeight: 700 }}>
-                                                {formatCurrency(contract.monthlyRent)}
-                                            </td>
-                                            <td>
-                                                <button
-                                                    className="btn btn-sm btn-secondary"
-                                                    onClick={() => {
-                                                        setSelectedContract(contract);
-                                                        setShowDetailModal(true);
-                                                    }}
-                                                >
-                                                    {t.contracts.btnViewDetails}
-                                                </button>
+                                    {filteredContracts.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                                {t.contracts.emptyTitle}
                                             </td>
                                         </tr>
-                                    ))}
+                                    ) : (
+                                        filteredContracts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((contract) => (
+                                            <tr key={contract.id}>
+                                                <td>
+                                                    <div style={{ fontWeight: 600 }}>{contract.person.name}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                        {contract.person.email || '—'}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style={{ fontWeight: 600 }}>{contract.productName || '—'}</div>
+                                                </td>
+                                                <td>
+                                                    <div style={{ fontWeight: 600 }}>{contract.productArea || '—'}</div>
+                                                </td>
+                                                <td>
+                                                    <div style={{ fontWeight: 600 }}>{contract.room.number}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                        {contract.room.building.name}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span className={`badge ${typeBadge(contract.type)}`}>
+                                                        {t.contracts.types[contract.type as keyof typeof t.contracts.types] || contract.type}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span className={`badge ${statusBadge(contract.status)}`}>
+                                                        {t.contracts.statuses[contract.status as keyof typeof t.contracts.statuses] || contract.status}
+                                                    </span>
+                                                    {contract.status === 'REJECTED' && (
+                                                        <button 
+                                                            className="info-icon" 
+                                                            style={{ 
+                                                                background: 'transparent',
+                                                                border: 'none',
+                                                                color: 'var(--accent-rose)',
+                                                                cursor: 'pointer',
+                                                                padding: '2px',
+                                                                fontSize: '0.9rem',
+                                                                lineHeight: 1,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                opacity: 0.8
+                                                            }}
+                                                            onClick={() => {
+                                                                setRejectDetails({
+                                                                    note: contract.reviewNote,
+                                                                    by: contract.reviewedBy,
+                                                                    at: contract.reviewedAt
+                                                                });
+                                                                setShowRejectModal(true);
+                                                            }}
+                                                            title={t.contracts.rejectDetailTitle}
+                                                        >
+                                                            ⓘ
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                                <td>
+                                                    <div style={{ fontSize: '0.85rem' }}>
+                                                        {formatDate(contract.createdAt)}
+                                                    </div>
+                                                </td>
+                                                <td style={{ fontWeight: 700 }}>
+                                                    {formatCurrency(contract.monthlyRent)}
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        className="btn btn-sm btn-secondary"
+                                                        onClick={() => {
+                                                            setSelectedContract(contract);
+                                                            setShowDetailModal(true);
+                                                        }}
+                                                    >
+                                                        {t.contracts.btnViewDetails}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
 
                         {/* ── Pagination ── */}
-                        {Math.ceil(contracts.length / PAGE_SIZE) > 1 && (
+                        {Math.ceil(filteredContracts.length / PAGE_SIZE) > 1 && (
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -315,7 +393,7 @@ export default function ContractsPage() {
                                 borderTop: '1px solid var(--border-subtle)',
                             }}>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                    {t.contracts.paginationShowing} {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, contracts.length)} {t.contracts.paginationOf} {contracts.length}
+                                    {t.contracts.paginationShowing} {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredContracts.length)} {t.contracts.paginationOf} {filteredContracts.length}
                                 </span>
                                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                                     <button
@@ -325,7 +403,7 @@ export default function ContractsPage() {
                                     >
                                         {t.contracts.paginationPrev}
                                     </button>
-                                    {Array.from({ length: Math.ceil(contracts.length / PAGE_SIZE) }, (_, i) => i + 1).map(page => (
+                                    {Array.from({ length: Math.ceil(filteredContracts.length / PAGE_SIZE) }, (_, i) => i + 1).map(page => (
                                         <button
                                             key={page}
                                             className="btn btn-sm"
@@ -342,8 +420,8 @@ export default function ContractsPage() {
                                     ))}
                                     <button
                                         className="btn btn-sm btn-secondary"
-                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(contracts.length / PAGE_SIZE), p + 1))}
-                                        disabled={currentPage === Math.ceil(contracts.length / PAGE_SIZE)}
+                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredContracts.length / PAGE_SIZE), p + 1))}
+                                        disabled={currentPage === Math.ceil(filteredContracts.length / PAGE_SIZE)}
                                     >
                                         {t.contracts.paginationNext}
                                     </button>
@@ -579,10 +657,10 @@ export default function ContractsPage() {
                         </div>
                         <div className="modal-body">
 
-                            {/* ── Info Grid ── */}
+                            {/* ── Info Grid (2x2) ── */}
                             <div className="detail-grid">
-
-                                {/* Tenant Info */}
+                                
+                                {/* 1) CUSTOMER CARD */}
                                 <div className="detail-section">
                                     <div className="detail-section-title">{t.contracts.sectionTenant}</div>
                                     <div className="detail-field">
@@ -597,20 +675,28 @@ export default function ContractsPage() {
                                     </div>
                                 </div>
 
-                                {/* Room Info */}
+                                {/* 2) ASSET CARD */}
                                 <div className="detail-section">
-                                    <div className="detail-section-title">{t.contracts.sectionRoom}</div>
+                                    <div className="detail-section-title">{t.contracts.sectionAsset}</div>
                                     <div className="detail-field">
-                                        <div className="detail-field-label">{t.contracts.labelRoomNo}</div>
-                                        <div className="detail-field-value">{selectedContract.room.number}</div>
+                                        <div className="detail-field-label">{t.contracts.colProductName}</div>
+                                        <div className="detail-field-value">{selectedContract.productName || '—'}</div>
+                                    </div>
+                                    <div className="detail-field">
+                                        <div className="detail-field-label">{t.contracts.colProductArea}</div>
+                                        <div className="detail-field-value">{selectedContract.productArea || '—'}</div>
                                     </div>
                                     <div className="detail-field">
                                         <div className="detail-field-label">{t.contracts.labelBuildingName}</div>
                                         <div className="detail-field-value">{selectedContract.room.building.name}</div>
                                     </div>
+                                    <div className="detail-field">
+                                        <div className="detail-field-label">{t.contracts.labelRoomNo}</div>
+                                        <div className="detail-field-value">{selectedContract.room.number}</div>
+                                    </div>
                                 </div>
 
-                                {/* Contract Info */}
+                                {/* 3) CONTRACT CARD */}
                                 <div className="detail-section">
                                     <div className="detail-section-title">{t.contracts.sectionContract}</div>
                                     <div className="detail-field">
@@ -637,16 +723,15 @@ export default function ContractsPage() {
                                     </div>
                                 </div>
 
-                                {/* Financial Info */}
+                                {/* 4) FINANCE CARD */}
                                 <div className="detail-section">
                                     <div className="detail-section-title">{t.contracts.sectionFinancials}</div>
                                     <div className="detail-field">
                                         <div className="detail-field-label">{t.contracts.labelRentAmount}</div>
-                                        <div className="detail-field-value" style={{ fontWeight: 700, fontSize: '1rem' }}>
+                                        <div className="detail-field-value" style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
                                             {formatCurrency(selectedContract.monthlyRent)}
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
 
@@ -800,6 +885,74 @@ export default function ContractsPage() {
             )}
 
             {toastMsg && <div className="toast success">✅ {toastMsg}</div>}
+
+            {/* ── Rejection Detail Modal ── */}
+            {showRejectModal && rejectDetails && (
+                <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+                        <div className="modal-header">
+                            <h2>⚠️ {t.contracts.rejectDetailTitle}</h2>
+                            <button className="modal-close" onClick={() => setShowRejectModal(false)}>✕</button>
+                        </div>
+                        <div className="modal-body">
+                            <div style={{ marginBottom: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                                            {t.contracts.colStatus}
+                                        </div>
+                                        <span className="badge rose">
+                                            {t.contracts.statuses.REJECTED}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                                            {t.contracts.labelRejectBy}
+                                        </div>
+                                        <div style={{ fontWeight: 600 }}>{rejectDetails.by || 'Admin'}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                                            {t.contracts.labelRejectAt}
+                                        </div>
+                                        <div style={{ fontSize: '0.9rem' }}>
+                                            {rejectDetails.at ? formatDate(rejectDetails.at) : '—'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ 
+                                    borderTop: '1px solid var(--border-subtle)', 
+                                    paddingTop: '16px', 
+                                    marginTop: '16px' 
+                                }}>
+                                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                                        {t.contracts.labelRejectReason}
+                                    </div>
+                                    <div style={{ 
+                                        background: 'rgba(244, 63, 94, 0.05)',
+                                        borderLeft: '4px solid var(--accent-rose)',
+                                        padding: '16px',
+                                        borderRadius: '0 4px 4px 0',
+                                        fontSize: '0.95rem',
+                                        lineHeight: '1.5',
+                                        color: '#fff',
+                                        maxHeight: '200px',
+                                        overflowY: 'auto'
+                                    }}>
+                                        {rejectDetails.note || 'No reason provided.'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ borderTop: 'none', paddingTop: 0 }}>
+                            <button className="btn btn-secondary" onClick={() => setShowRejectModal(false)} style={{ width: '100%' }}>
+                                {t.contracts.btnClose || 'Close'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

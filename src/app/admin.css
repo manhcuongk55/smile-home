@@ -1,0 +1,341 @@
+/* ============================================================
+   ADMIN PORTAL — Enterprise Design System (Refined)
+   Minimalist, Stable, Low Saturation, High Hierarchy
+   ============================================================ */
+
+.admin-portal {
+    --admin-bg: #F9FAFB;
+    --admin-sidebar-bg: #FFFFFF;
+    --admin-card-bg: #FFFFFF;
+    --admin-border: #E5E7EB;
+    
+    /* ── Neutrals ── */
+    --admin-text-main: #111827;
+    --admin-text-secondary: #374151;
+    --admin-text-muted: #6B7280;
+    
+    /* ── Enterprise Accent Colors (Desaturated) ── */
+    --admin-accent-primary: #374151;
+    --admin-accent-blue: #2563EB;
+    --admin-status-green-bg: #DCFCE7;
+    --admin-status-green-text: #166534;
+    --admin-status-red-bg: #FEE2E2;
+    --admin-status-red-text: #991B1B;
+    --admin-status-yellow-bg: #FEF3C7;
+    --admin-status-yellow-text: #92400E;
+    
+    --admin-sidebar-width: 240px;
+    --admin-header-height: 64px;
+    
+    background-color: var(--admin-bg) !important;
+    color: var(--admin-text-main);
+    font-family: 'Inter', -apple-system, sans-serif;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+.admin-portal-layout {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+/* ── Sidebar ── */
+.admin-sidebar {
+    width: var(--admin-sidebar-width);
+    min-width: var(--admin-sidebar-width);
+    background: var(--admin-sidebar-bg);
+    border-right: 1px solid var(--admin-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+}
+
+.admin-logo {
+    height: var(--admin-header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 0.875rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--admin-text-main);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-nav {
+    flex: 1;
+    padding-top: 12px;
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 24px;
+    color: var(--admin-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.admin-nav-item:hover {
+    color: var(--admin-text-main);
+    background: #F9FAFB;
+}
+
+.admin-nav-item.active {
+    color: var(--admin-text-main);
+    background: #F3F4F6;
+    font-weight: 600;
+}
+
+.admin-nav-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--admin-border);
+}
+
+/* ── Main Area ── */
+.admin-main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.admin-top-header {
+    height: var(--admin-header-height);
+    min-height: var(--admin-header-height);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+}
+
+.admin-top-header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--admin-text-main);
+    margin: 0;
+}
+
+.admin-content {
+    flex: 1;
+    padding: 0 24px 24px 24px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-fill-container {
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Contract Review Panels ── */
+.contract-review-grid {
+    display: flex;
+    gap: 24px;
+    height: calc(100vh - var(--admin-header-height) - 24px);
+    min-height: 0;
+}
+
+.panel-container {
+    background: #fff;
+    border: 1px solid var(--admin-border);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    /* overflow: hidden; Removed to prevent clipping */
+}
+
+.panel-left {
+    width: 320px;
+    min-width: 320px;
+}
+
+.panel-right {
+    flex: 1;
+    min-width: 0; /* Critical for shrinking children in flexbox */
+}
+
+/* ── List Area ── */
+.list-search-box {
+    padding: 16px;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.list-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.contract-item {
+    padding: 16px;
+    border-bottom: 1px solid var(--admin-border);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-left: 3px solid transparent;
+}
+
+.contract-item:hover {
+    background: #F9FAFB;
+}
+
+.contract-item.selected {
+    background: #F9FAFB;
+    border-left-color: var(--admin-accent-blue);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.item-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--admin-text-main);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.item-unit {
+    font-size: 0.75rem;
+    color: var(--admin-text-muted);
+}
+
+.item-value {
+    margin-top: 10px;
+    font-weight: 600;
+    color: var(--admin-text-main);
+    font-size: 0.875rem;
+}
+
+.item-date {
+    font-size: 0.75rem;
+    color: var(--admin-text-muted);
+}
+
+/* ── Detail Area ── */
+.detail-section-info {
+    padding: 16px 24px; /* Reduced vertical padding */
+    overflow-y: auto;
+}
+
+.detail-section-pdf {
+    flex: 1;
+    min-height: 0;
+    overflow: auto; /* Required for PDF internal scrolling */
+    border-top: 1px solid var(--admin-border);
+    background: #F3F4F6;
+    margin: 0;
+}
+
+.detail-section-action {
+    background: #F9FAFB;
+    border-top: 1px solid var(--admin-border);
+    padding: 12px 24px; /* Reduced vertical padding */
+}
+
+/* ── Components ── */
+.data-label {
+    font-size: 0.625rem;
+    color: var(--admin-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.data-value {
+    font-size: 0.8125rem;
+    color: var(--admin-text-main);
+    font-weight: 500;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px 24px;
+}
+
+/* ── Badges ── */
+.badge-fixed {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.badge-yellow { background: var(--admin-status-yellow-bg); color: var(--admin-status-yellow-text); }
+.badge-green { background: var(--admin-status-green-bg); color: var(--admin-status-green-text); }
+.badge-red { background: var(--admin-status-red-bg); color: var(--admin-status-red-text); }
+
+/* ── Buttons ── */
+.btn-solid {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-green { background: #059669; color: #fff; }
+.btn-red { background: #DC2626; color: #fff; }
+.btn-solid:hover { opacity: 0.9; }
+.btn-solid:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.admin-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid var(--admin-border);
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.admin-input:focus {
+    border-color: var(--admin-text-muted);
+}
+
+.admin-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--admin-border);
+    border-radius: 4px;
+    font-size: 0.8125rem;
+    resize: none;
+    height: 56px; /* Reduced height */
+    margin-bottom: 8px;
+    outline: none;
+}
+
+.admin-textarea:focus { border-color: var(--admin-text-muted); }
+
+/* ── Overrides ── */
+body:has(.admin-portal) {
+    background: #F9FAFB !important;
+}
+
+body:has(.admin-portal) .sidebar,
+body:has(.admin-portal) .top-header {
+    display: none !important;
+}
+
+body:has(.admin-portal) .main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+}
