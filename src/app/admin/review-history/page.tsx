@@ -54,6 +54,7 @@ export default function AdminReviewHistory() {
     const [endDate, setEndDate] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [sortBy, setSortBy] = useState('reviewedAt');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
     // Debounce search
@@ -75,7 +76,7 @@ export default function AdminReviewHistory() {
         startDate,
         endDate,
         search: debouncedSearch,
-        sortBy: 'reviewedAt',
+        sortBy,
         sortOrder
     });
     if (selectedRange?.min !== null) queryParams.append('minAmount', selectedRange!.min.toString());
@@ -96,8 +97,13 @@ export default function AdminReviewHistory() {
         setPage(1);
     };
 
-    const toggleSort = () => {
-        setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+    const handleSort = (field: string) => {
+        if (sortBy === field) {
+            setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+        } else {
+            setSortBy(field);
+            setSortOrder('desc');
+        }
         setPage(1);
     };
 
@@ -237,19 +243,46 @@ export default function AdminReviewHistory() {
                             <tr style={{ background: '#F9FAFB', borderBottom: '1px solid var(--admin-border)' }}>
                                 <th 
                                     style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }}
-                                    onClick={toggleSort}
+                                    onClick={() => handleSort('reviewedAt')}
                                     className="th-sortable"
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         {t.admin.colTime}
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--admin-accent-blue)' }}>
+                                        <span style={{ 
+                                            fontSize: '0.75rem', 
+                                            color: 'var(--admin-accent-blue)',
+                                            width: '14px',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            transition: 'opacity 0.15s ease',
+                                            opacity: sortBy === 'reviewedAt' ? 1 : 0
+                                        }}>
                                             {sortOrder === 'desc' ? '↓' : '↑'}
                                         </span>
                                     </div>
                                 </th>
                                 <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)' }}>{t.contracts.colProductName}</th>
                                 <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)' }}>{t.contracts.colProductArea}</th>
-                                <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)', textAlign: 'right' }}>{t.contracts.colRent}</th>
+                                <th 
+                                    style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)', textAlign: 'right', cursor: 'pointer', transition: 'color 0.2s', whiteSpace: 'nowrap' }} 
+                                    onClick={() => handleSort('monthlyRent')}
+                                    className="th-sortable"
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                                        <span style={{ 
+                                            fontSize: '0.75rem', 
+                                            color: 'var(--admin-accent-blue)',
+                                            width: '14px',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            transition: 'opacity 0.15s ease',
+                                            opacity: sortBy === 'monthlyRent' ? 1 : 0
+                                        }}>
+                                            {sortOrder === 'desc' ? '↓' : '↑'}
+                                        </span>
+                                        {t.contracts.colRent}
+                                    </div>
+                                </th>
                                 <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)' }}>{t.admin.colCustomer}</th>
                                 <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)' }}>{t.admin.colAction}</th>
                                 <th style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--admin-text-muted)' }}>{t.admin.colReviewer}</th>

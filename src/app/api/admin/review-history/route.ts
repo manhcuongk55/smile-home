@@ -73,7 +73,14 @@ export async function GET(req: NextRequest) {
         // Clone for count before adding order/limit
         const countQuery = `SELECT COUNT(*) as count FROM (${query}) as sub`;
         
-        query += ` ORDER BY h.${sortBy} ${sortOrder === 'asc' ? 'ASC' : 'DESC'} LIMIT ? OFFSET ?`;
+        let orderByClause = '';
+        if (sortBy === 'monthlyRent') {
+            orderByClause = `ORDER BY c.monthlyRent ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+        } else {
+            orderByClause = `ORDER BY h.reviewedAt ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+        }
+
+        query += ` ${orderByClause} LIMIT ? OFFSET ?`;
         params.push(limit, offset);
 
         const [historyRaw, countRaw, reviewersRaw] = await Promise.all([
