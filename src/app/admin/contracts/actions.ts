@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { emitContractChange } from '@/lib/events';
 import crypto from 'crypto';
 
 export async function approveContract(contractId: string, note?: string) {
@@ -37,6 +38,7 @@ export async function approveContract(contractId: string, note?: string) {
             VALUES (${crypto.randomUUID()}, ${contractId}, ${fromStatus}, 'APPROVED', 'Admin', ${new Date().toISOString()}, ${note || null})
         `;
 
+        emitContractChange();
         return { success: true };
     } catch (error) {
         console.error('Failed to approve contract:', error);
@@ -78,7 +80,8 @@ export async function rejectContract(contractId: string, note: string) {
             INSERT INTO ContractReviewHistory (id, contractId, fromStatus, toStatus, reviewedBy, reviewedAt, note)
             VALUES (${crypto.randomUUID()}, ${contractId}, ${fromStatus}, 'REJECTED', 'Admin', ${new Date().toISOString()}, ${note})
         `;
-        
+
+        emitContractChange();
         return { success: true };
     } catch (error) {
         console.error('Failed to reject contract:', error);

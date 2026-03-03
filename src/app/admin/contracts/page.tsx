@@ -5,7 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { approveContract, rejectContract } from './actions';
 import useSWR from 'swr';
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then(res => res.json());
 
 interface ContractDocument {
     id: string;

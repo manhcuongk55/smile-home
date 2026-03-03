@@ -54,9 +54,9 @@ interface Person {
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string) {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
+    return new Date(dateStr).toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
         year: 'numeric',
     });
 }
@@ -100,7 +100,7 @@ const VIETNAM_PROVINCES = [
     'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau', 'Cần Thơ', 'Cao Bằng', 'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương', 'Hải Phòng', 'Hậu Giang', 'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'TP Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
 ];
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then(res => res.json());
 
 export default function ContractsPage() {
     const { t } = useLanguage();
@@ -189,6 +189,22 @@ export default function ContractsPage() {
                 body: formData,
             });
             if (res.ok) {
+                const newContract = await res.json();
+                
+                // 1. Clear filters & pagination immediately so user sees the top of list
+                setSearchTerm('');
+                setSelectedAreas([]);
+                setCurrentPage(1);
+                
+                // 2. Optimistic Update (put new contract at the top)
+                mutate(currentData => {
+                    if (!currentData) return [newContract];
+                    // Skip if accidentally duplicated
+                    if (currentData.some(c => c.id === newContract.id)) return currentData;
+                    return [newContract, ...currentData];
+                }, false);
+
+                // 3. UI Resets
                 setShowUploadModal(false);
                 setUploadFile(null);
                 setUploadTenantName('');
@@ -202,9 +218,12 @@ export default function ContractsPage() {
                 setUploadProductArea('');
                 setUploadProductFile(null);
                 setToastMsg(t.contracts.toastSuccess);
-                mutate();
-                setSelectedAreas([]);
-                setTimeout(() => setToastMsg(''), 3000);
+                
+                // 4. Background re-fetch after 500ms to ensure server is synced
+                setTimeout(() => {
+                    mutate();
+                    setToastMsg('');
+                }, 1500);
             } else {
                 const data = await res.json();
                 alert(data.error || t.contracts.errorUpload);

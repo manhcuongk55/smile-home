@@ -3,6 +3,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
+import { emitContractChange } from '@/lib/events';
 
 export const runtime = 'nodejs';
 
@@ -171,7 +172,21 @@ export async function POST(req: Request) {
             });
         }
 
-        return NextResponse.json({ success: true });
+        const fullContract = await prisma.contract.findUnique({
+            where: { id: contract.id },
+            include: {
+                room: {
+                    include: { building: true }
+                },
+                person: true,
+                documents: {
+                    orderBy: { createdAt: 'desc' },
+                },
+            },
+        });
+
+        emitContractChange();
+        return NextResponse.json(fullContract);
 
     } catch (error) {
         console.error('Error uploading contract document:', error);

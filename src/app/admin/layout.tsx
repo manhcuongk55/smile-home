@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
+import AdminBadge from '@/components/AdminBadge';
 import '../admin.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -35,8 +36,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 key={item.href}
                                 href={item.href}
                                 className={`admin-nav-item ${pathname === item.href ? 'active' : ''}`}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                             >
-                                {item.label}
+                                <span>{item.label}</span>
+                                <AdminBadge href={item.href} />
                             </Link>
                         ))}
                     </nav>
