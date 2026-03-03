@@ -99,6 +99,24 @@ export default function AdminContractReview() {
     const contracts = data?.contracts || [];
     const pendingCount = data?.pendingCount || 0;
 
+    // Real-time update listener
+    useEffect(() => {
+        const eventSource = new EventSource('/api/admin/contracts/pending-count/stream');
+        
+        eventSource.onmessage = () => {
+            mutate();
+        };
+
+        eventSource.onerror = (err) => {
+            console.error('SSE connection error in AdminContracts:', err);
+            eventSource.close();
+        };
+
+        return () => {
+            eventSource.close();
+        };
+    }, [mutate]);
+
     // Auto-select logic
     useEffect(() => {
         if (!isLoading && contracts.length > 0 && (!selectedContractId || !contracts.some(c => c.id === selectedContractId))) {
