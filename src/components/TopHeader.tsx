@@ -2,6 +2,7 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import GlobalSearch from './GlobalSearch';
+import NotificationBell from './NotificationBell';
 
 export default function TopHeader() {
     const { lang, setLang } = useLanguage();
@@ -67,6 +68,8 @@ export default function TopHeader() {
                         EN
                     </button>
                 </div>
+                
+                <NotificationBell />
             </div>
 
             <GlobalSearch />

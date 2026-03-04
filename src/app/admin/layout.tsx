@@ -4,6 +4,8 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import AdminBadge from '@/components/AdminBadge';
+import { NotificationProvider } from '@/context/NotificationContext';
+import NotificationBell from '@/components/NotificationBell';
 import '../admin.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -53,8 +55,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {/* ── MAIN AREA ── */}
                 <div className="admin-main-area">
                     {/* Top Header (fixed height 64px) */}
-                    <header className="admin-top-header">
+                    <header className="admin-top-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        paddingRight: '24px',
+                        background: '#fff',
+                        borderBottom: '1px solid var(--admin-border)'
+                    }}>
                         <h1>{pageTitle}</h1>
+                        <NotificationBell />
                     </header>
 
                     {/* Content Area (flex 1, padding 24px) */}

@@ -4,6 +4,9 @@ import { join } from 'path';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/prisma';
 import { emitContractChange } from '@/lib/events';
+import { NotificationService } from '@/services/notification.service';
+import { SSEManager } from '@/lib/sse';
+import { ContractCodeService } from '@/services/contract-code.service';
 
 export const runtime = 'nodejs';
 
@@ -75,114 +78,138 @@ export async function POST(req: Request) {
         // ── Upload files ──────────────────────────────────────────────────────
         const fileUrl = await uploadFile(file, 'contracts');
 
-        // ── 1. Find or create Person ──────────────────────────────────────────
-        let person = tenantEmail
-            ? await prisma.person.findFirst({ where: { email: tenantEmail } })
-            : await prisma.person.findFirst({ where: { name: tenantName } });
+        // ── Database Operations (Transaction) ──────────────────────────────────
+        const fullContract = await prisma.$transaction(async (tx) => {
+            // 1. Find or create Person
+            let person = tenantEmail
+                ? await tx.person.findFirst({ where: { email: tenantEmail } })
+                : await tx.person.findFirst({ where: { name: tenantName } });
 
-        if (!person) {
-            person = await prisma.person.create({
-                data: {
-                    name: tenantName,
-                    email: tenantEmail ?? undefined,
-                    role: 'TENANT',
-                },
-            });
-        }
-
-        // ── 2. Find or create Building ────────────────────────────────────────
-        //    Building requires a propertyId — reuse first property or create one.
-        let building = await prisma.building.findFirst({ where: { name: buildingName } });
-
-        if (!building) {
-            // Resolve a fallback property (create if the db is empty)
-            let property = await prisma.property.findFirst();
-            if (!property) {
-                property = await prisma.property.create({
-                    data: { name: 'Default Property', address: '-' },
+            if (!person) {
+                person = await tx.person.create({
+                    data: {
+                        name: tenantName,
+                        email: tenantEmail ?? undefined,
+                        role: 'TENANT',
+                    },
                 });
             }
-            building = await prisma.building.create({
+
+            // 2. Find or create Building
+            let building = await tx.building.findFirst({ where: { name: buildingName } });
+            if (!building) {
+                let property = await tx.property.findFirst();
+                if (!property) {
+                    property = await tx.property.create({
+                        data: { name: 'Default Property', address: '-' },
+                    });
+                }
+                building = await tx.building.create({
+                    data: {
+                        name: buildingName,
+                        propertyId: property.id,
+                    },
+                });
+            }
+
+            // 3. Find or create Room
+            let room = await tx.room.findFirst({
+                where: { number: roomNumber, buildingId: building.id },
+            });
+            if (!room) {
+                room = await tx.room.create({
+                    data: {
+                        number: roomNumber,
+                        buildingId: building.id,
+                    },
+                });
+            }
+
+            // 4. Generate ATOMIC contract code
+            const contractCode = await ContractCodeService.generateCode(tx);
+
+            // 5. Create Contract
+            const contract = await tx.contract.create({
                 data: {
-                    name: buildingName,
-                    propertyId: property.id,
+                    contractCode,
+                    personId: person.id,
+                    roomId: room.id,
+                    type: contractType,
+                    status: 'PENDING',
+                    startDate: startDateRaw ? new Date(startDateRaw) : new Date(),
+                    endDate: endDateRaw ? new Date(endDateRaw) : new Date(),
+                    monthlyRent: parsedMonthlyRent,
+                    deposit: 0,
+                    productName,
+                    productArea,
                 },
             });
-        }
 
-        // ── 3. Find or create Room ────────────────────────────────────────────
-        let room = await prisma.room.findFirst({
-            where: { number: roomNumber, buildingId: building.id },
-        });
-
-        if (!room) {
-            room = await prisma.room.create({
-                data: {
-                    number: roomNumber,
-                    buildingId: building.id,
-                },
-            });
-        }
-
-        // ── 4. Create DRAFT Contract ──────────────────────────────────────────
-        const contract = await prisma.contract.create({
-            data: {
-                personId: person.id,
-                roomId: room.id,
-                type: contractType,
-                status: 'PENDING',
-                startDate: startDateRaw ? new Date(startDateRaw) : new Date(),
-                endDate: endDateRaw ? new Date(endDateRaw) : new Date(),
-                monthlyRent: parsedMonthlyRent,
-                deposit: 0,
-                productName,
-                productArea,
-            },
-        });
-
-        // ── 5. Create ContractDocument (Main) ────────────────────────────────
-        await prisma.contractDocument.create({
-            data: {
-                contractId: contract.id,
-                fileUrl,
-                originalName: file.name,
-                fileSize: file.size,
-                mimeType: file.type,
-                // @ts-ignore
-                documentType: 'CONTRACT',
-                approvalStatus: 'PENDING',
-            },
-        });
-
-        // ── 6. Handle Mandatory Product Detail File ──────────────────────────
-        if (productFile && productFile.size > 0) {
-            const productFileUrl = await uploadFile(productFile, 'products');
-
-            await prisma.contractDocument.create({
+            // 6. Create ContractDocuments
+            await tx.contractDocument.create({
                 data: {
                     contractId: contract.id,
-                    fileUrl: productFileUrl,
-                    originalName: productFile.name,
-                    fileSize: productFile.size,
-                    mimeType: productFile.type,
-                    // @ts-ignore
-                    documentType: 'PRODUCT_DETAIL',
+                    fileUrl,
+                    originalName: file.name,
+                    fileSize: file.size,
+                    mimeType: file.type,
+                    documentType: 'CONTRACT',
                     approvalStatus: 'PENDING',
                 },
             });
+
+            if (productFile && productFile.size > 0) {
+                const productFileUrl = await uploadFile(productFile, 'products');
+
+                await tx.contractDocument.create({
+                    data: {
+                        contractId: contract.id,
+                        fileUrl: productFileUrl,
+                        originalName: productFile.name,
+                        fileSize: productFile.size,
+                        mimeType: productFile.type,
+                        documentType: 'PRODUCT_DETAIL',
+                        approvalStatus: 'PENDING',
+                    },
+                });
+            }
+
+            // Return full data
+            return tx.contract.findUnique({
+                where: { id: contract.id },
+                include: {
+                    room: {
+                        include: { building: true }
+                    },
+                    person: true,
+                    documents: {
+                        orderBy: { createdAt: 'desc' },
+                    },
+                },
+            });
+        });
+
+        if (!fullContract) {
+            throw new Error('Failed to retrieve created contract');
         }
 
-        const fullContract = await prisma.contract.findUnique({
-            where: { id: contract.id },
-            include: {
-                room: {
-                    include: { building: true }
-                },
-                person: true,
-                documents: {
-                    orderBy: { createdAt: 'desc' },
-                },
-            },
+        const roomNumberActual = fullContract.room.number;
+        const buildingNameActual = fullContract.room.building.name;
+
+        // 7. Create Notification for Administration
+        const notification = await NotificationService.createNotification({
+            type: 'CONTRACT_UPLOADED',
+            title: 'Hợp đồng mới cần duyệt',
+            message: `Đại lý ${tenantName} đã tải lên một hợp đồng mới cần phê duyệt.`,
+            referenceId: fullContract.id,
+            receiverRole: 'ADMIN',
+            receiverId: null,
+        });
+
+        // 8. Emit SSE to all Admins
+        SSEManager.emitToAdmins('contract_uploaded', {
+            notificationId: notification.id,
+            contractId: fullContract.id
         });
 
         emitContractChange();

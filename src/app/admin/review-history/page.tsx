@@ -19,6 +19,7 @@ interface ReviewHistoryItem {
         productName: string | null;
         productArea: string | null;
         monthlyRent: number;
+        contractCode: string;
         person: {
             name: string;
         };
@@ -320,7 +321,9 @@ export default function AdminReviewHistory() {
                                             <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.contract.productName || '—'}>
                                                 {item.contract.productName || '—'}
                                             </div>
-                                            <div style={{ fontSize: '0.6875rem', color: 'var(--admin-text-muted)', fontWeight: 400 }}>ID: {item.contractId.substring(0,8)}...</div>
+                                            <div style={{ fontSize: '0.6875rem', color: 'var(--admin-accent-blue)', fontWeight: 600, fontFamily: 'monospace' }}>
+                                                {item.contract.contractCode || item.contractId.substring(0, 8).toUpperCase()}
+                                            </div>
                                         </td>
                                         <td style={{ padding: '14px 16px', color: 'var(--admin-text-muted)', fontSize: '0.75rem' }}>
                                             {item.contract.productArea || '—'}

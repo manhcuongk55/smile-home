@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
                 c.productName,
                 c.productArea,
                 c.monthlyRent,
+                c.contractCode,
                 p.name as personName
             FROM ContractReviewHistory h
             JOIN Contract c ON h.contractId = c.id
@@ -65,9 +66,9 @@ export async function GET(req: NextRequest) {
         }
 
         if (search) {
-            query += ` AND (c.productName LIKE ? OR p.name LIKE ? OR h.contractId LIKE ?)`;
+            query += ` AND (c.productName LIKE ? OR p.name LIKE ? OR c.contractCode LIKE ? OR h.contractId LIKE ?)`;
             const s = `%${search}%`;
-            params.push(s, s, s);
+            params.push(s, s, s, s);
         }
 
         // Clone for count before adding order/limit
@@ -96,6 +97,7 @@ export async function GET(req: NextRequest) {
                 productName: item.productName,
                 productArea: item.productArea,
                 monthlyRent: item.monthlyRent,
+                contractCode: item.contractCode || '',
                 person: {
                     name: item.personName
                 }

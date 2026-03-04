@@ -120,9 +120,11 @@ export default function DashboardPage() {
           <h1>{t.dashTitle}</h1>
           <p>{t.dashSubtitle}</p>
         </div>
-        <button className="btn btn-primary" onClick={handleSeed} disabled={seeding}>
-          {seeding ? t.btnSeeding : t.btnSeed}
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button className="btn btn-primary" onClick={handleSeed} disabled={seeding}>
+            {seeding ? t.btnSeeding : t.btnSeed}
+          </button>
+        </div>
       </div>
 
       <div className="stats-grid">

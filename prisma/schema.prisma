@@ -122,29 +122,38 @@ model Message {
 }
 
 model Contract {
-  id          String   @id @default(cuid())
-  roomId      String
-  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  personId    String
-  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
-  type        String   @default("RENTAL") // RENTAL, SALE, MANAGEMENT, LEASE_EXTEND, SHORT_TERM
-  status      String   @default("DRAFT") // DRAFT, ACTIVE, EXPIRED, TERMINATED
-  startDate   DateTime
-  endDate     DateTime
-  monthlyRent Float    @default(0)
-  deposit     Float    @default(0)
-  productName String?
-  productArea String?
-  reviewNote  String?
-  reviewedBy  String?
-  reviewedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  contractCode String?  @unique // Optional initially to pass migration
+  roomId       String
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  personId     String
+  person       Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  type         String   @default("RENTAL") // RENTAL, SALE, MANAGEMENT, LEASE_EXTEND, SHORT_TERM
+  status       String   @default("DRAFT") // DRAFT, ACTIVE, EXPIRED, TERMINATED
+  startDate    DateTime
+  endDate      DateTime
+  monthlyRent  Float    @default(0)
+  deposit      Float    @default(0)
+  productName  String?
+  productArea  String?
+  reviewNote   String?
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  invoices     Invoice[]
-  interactions Interaction[]
-  documents    ContractDocument[]
+  invoices        Invoice[]
+  interactions    Interaction[]
+  documents       ContractDocument[]
   reviewHistories ContractReviewHistory[]
+
+  @@index([createdAt])
+}
+
+model ContractSequence {
+  year         Int      @id
+  lastSequence Int      @default(0)
+  updatedAt    DateTime @updatedAt
 }
 
 model Invoice {
@@ -273,4 +282,20 @@ model ContractReviewHistory {
   reviewedAt   DateTime @default(now())
   note         String?
   contract     Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+}
+model Notification {
+  id           String   @id @default(uuid())
+  type         String   // CONTRACT_UPLOADED, CONTRACT_APPROVED, CONTRACT_REJECTED
+  title        String
+  message      String
+  referenceId  String?  // stores contractId
+  receiverId   String?  // specific user ID
+  receiverRole String   // ADMIN or USER
+  isRead       Boolean  @default(false)
+  metadata     Json?    // extensible storage
+  createdAt    DateTime @default(now())
+
+  @@index([receiverRole, isRead])
+  @@index([receiverId, isRead])
+  @@index([createdAt(sort: Desc)])
 }

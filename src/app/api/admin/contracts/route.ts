@@ -35,15 +35,16 @@ export async function GET(req: NextRequest) {
 
         // 3. Search keyword
         if (search) {
-             const keyword = search.toLowerCase();
              where.OR = [
-                 { person: { name: { contains: keyword } } },
-                 { person: { email: { contains: keyword } } },
-                 { room: { number: { contains: keyword } } },
-                 { room: { building: { name: { contains: keyword } } } },
-                 { productName: { contains: keyword } },
-                 { productArea: { contains: keyword } },
-                 { type: { contains: keyword } }
+                 { id: { contains: search } },
+                 { contractCode: { contains: search } },
+                 { person: { name: { contains: search } } },
+                 { person: { email: { contains: search } } },
+                 { room: { number: { contains: search } } },
+                 { room: { building: { name: { contains: search } } } },
+                 { productName: { contains: search } },
+                 { productArea: { contains: search } },
+                 { type: { contains: search } }
              ];
         }
 

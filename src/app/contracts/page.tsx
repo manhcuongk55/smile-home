@@ -30,6 +30,7 @@ interface Contract {
     startDate: string;
     endDate: string;
     monthlyRent: number;
+    contractCode: string; // Added contractCode to the interface
     deposit: number;
     productName?: string;
     productArea?: string;
@@ -95,6 +96,7 @@ function approvalBadge(status: string) {
 import { useLanguage } from '@/context/LanguageContext';
 import CombinedSelect from '@/components/CombinedSelect';
 import FilterArea from '@/components/FilterArea';
+import FilterMoney, { MONEY_RANGES } from '@/components/FilterMoney';
 
 const VIETNAM_PROVINCES = [
     'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau', 'Cần Thơ', 'Cao Bằng', 'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương', 'Hải Phòng', 'Hậu Giang', 'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'TP Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
@@ -108,6 +110,17 @@ export default function ContractsPage() {
         revalidateOnFocus: true,
         revalidateOnReconnect: true
     });
+    
+    useEffect(() => {
+        if (data && data.length > 0) {
+            console.log('[ContractsPage] Top contract:', {
+                id: data[0].id,
+                code: data[0].contractCode,
+                allFields: Object.keys(data[0])
+            });
+        }
+    }, [data]);
+    
     const contracts = data || [];
 
     // Upload modal
@@ -137,7 +150,9 @@ export default function ContractsPage() {
     // Toast
     const [toastMsg, setToastMsg] = useState('');
     const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+    const [moneyRangeKey, setMoneyRangeKey] = useState('ALL');
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
 
     // Rejection details modal
     const [showRejectModal, setShowRejectModal] = useState(false);
@@ -154,9 +169,19 @@ export default function ContractsPage() {
             c.person.name.toLowerCase().includes(query) ||
             (c.person.email || '').toLowerCase().includes(query) ||
             c.room.number.toLowerCase().includes(query) ||
-            (c.productName || '').toLowerCase().includes(query);
-        
-        return matchesArea && matchesSearch;
+            (c.productName || '').toLowerCase().includes(query) ||
+            (c.contractCode || '').toLowerCase().includes(query);
+        // Money Range Filter
+        const range = MONEY_RANGES.find(r => r.key === moneyRangeKey);
+        let matchesMoney = true;
+        if (range) {
+            if (range.min !== null && c.monthlyRent < range.min) matchesMoney = false;
+            if (range.max !== null && c.monthlyRent > range.max) matchesMoney = false;
+        }
+
+        const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
+
+        return matchesArea && matchesSearch && matchesMoney && matchesStatus;
     });
 
 
@@ -194,6 +219,7 @@ export default function ContractsPage() {
                 // 1. Clear filters & pagination immediately so user sees the top of list
                 setSearchTerm('');
                 setSelectedAreas([]);
+                setStatusFilter('ALL');
                 setCurrentPage(1);
                 
                 // 2. Optimistic Update (put new contract at the top)
@@ -247,7 +273,7 @@ export default function ContractsPage() {
                     <p>{t.contracts.pageSubtitle}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div className="search-input-wrapper" style={{ position: 'relative', width: '300px' }}>
+                    <div className="search-input-wrapper" style={{ position: 'relative', width: '220px' }}>
                         <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
                         <input 
                             type="text"
@@ -276,6 +302,41 @@ export default function ContractsPage() {
                             setCurrentPage(1);
                         }}
                     />
+                    <FilterMoney 
+                        selectedValue={moneyRangeKey}
+                        onApply={(val) => {
+                            setMoneyRangeKey(val);
+                            setCurrentPage(1);
+                        }}
+                    />
+                    
+                    {/* Status Filter */}
+                    <div className="filter-status-wrapper" style={{ position: 'relative' }}>
+                        <select 
+                            className="btn btn-secondary"
+                            value={statusFilter}
+                            onChange={(e) => {
+                                setStatusFilter(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            style={{ 
+                                padding: '8px 32px 8px 16px',
+                                background: 'var(--bg-card)',
+                                border: '1px solid var(--border-subtle)',
+                                borderRadius: 'var(--radius-sm)',
+                                color: 'var(--text-primary)',
+                                fontSize: '0.875rem',
+                                appearance: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="ALL">{t.admin.labelAllStatus}</option>
+                            <option value="PENDING">{t.contracts.statuses.PENDING}</option>
+                            <option value="ACTIVE">{t.contracts.statuses.ACTIVE}</option>
+                            <option value="REJECTED">{t.contracts.statuses.REJECTED}</option>
+                        </select>
+                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '0.7rem', opacity: 0.6 }}>▼</span>
+                    </div>
                     <button className="btn btn-primary" onClick={() => setShowUploadModal(true)}>
                         {t.contracts.uploadBtn}
                     </button>
@@ -299,7 +360,7 @@ export default function ContractsPage() {
                                         <th>{t.contracts.colTenant}</th>
                                         <th>{t.contracts.colProductName}</th>
                                         <th>{t.contracts.colProductArea}</th>
-                                        <th>{t.contracts.colRoom}</th>
+                                        <th>{t.contracts.colContractCode}</th>
                                         <th>{t.contracts.colType}</th>
                                         <th>{t.contracts.colStatus}</th>
                                         <th>{t.contracts.colDate}</th>
@@ -330,9 +391,10 @@ export default function ContractsPage() {
                                                     <div style={{ fontWeight: 600 }}>{contract.productArea || '—'}</div>
                                                 </td>
                                                 <td>
-                                                    <div style={{ fontWeight: 600 }}>{contract.room.number}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                        {contract.room.building.name}
+                                                    <div style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                        {contract.contractCode && contract.contractCode !== 'TEMP_CODE' 
+                                                            ? contract.contractCode 
+                                                            : contract.id.substring(0, 8).toUpperCase()}
                                                     </div>
                                                 </td>
                                                 <td>
@@ -558,11 +620,8 @@ export default function ContractsPage() {
                                             required
                                             disabled={isUploading}
                                         >
-                                            <option value="RENTAL">{t.contracts.types.RENTAL}</option>
                                             <option value="SALE">{t.contracts.types.SALE}</option>
-                                            <option value="MANAGEMENT">{t.contracts.types.MANAGEMENT}</option>
-                                            <option value="LEASE_EXTEND">{t.contracts.types.LEASE_EXTEND}</option>
-                                            <option value="SHORT_TERM">{t.contracts.types.SHORT_TERM}</option>
+                                            <option value="RENTAL">{t.contracts.types.RENTAL}</option>
                                             <option value="OTHER">{t.contracts.types.OTHER}</option>
                                         </select>
                                     </div>

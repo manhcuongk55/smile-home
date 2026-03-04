@@ -14,7 +14,11 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json(contracts);
+    const sanitized = contracts.map(c => ({
+        ...c,
+        contractCode: (c as any).contractCode || ''
+    }));
+    return NextResponse.json(sanitized);
 }
 
 export async function POST(request: NextRequest) {

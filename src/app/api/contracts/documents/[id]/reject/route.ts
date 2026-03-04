@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NotificationService } from '@/services/notification.service';
+import { SSEManager } from '@/lib/sse';
 
 export const runtime = 'nodejs';
 
@@ -10,7 +12,11 @@ export async function PATCH(
     try {
         const { id } = await params;
 
-        const doc = await prisma.contractDocument.findUnique({ where: { id } });
+        const doc = await prisma.contractDocument.findUnique({ 
+            where: { id },
+            include: { contract: true }
+        });
+        
         if (!doc) {
             return NextResponse.json({ error: 'Document not found' }, { status: 404 });
         }
@@ -22,10 +28,23 @@ export async function PATCH(
             where: { id },
             data: {
                 approvalStatus: 'REJECTED',
-                // Store the rejection reason in a note field if the schema supports it,
-                // otherwise this is a no-op and only the status is updated.
-                ...(rejectionReason ? {} : {}),
             },
+        });
+
+        // MVP Mode: Notify 'mock-user-1'
+        const mockUserId = 'mock-user-1';
+        const notification = await NotificationService.createNotification({
+            type: 'CONTRACT_REJECTED',
+            title: 'Hợp đồng bị từ chối',
+            message: `Hợp đồng của bạn cho file "${doc.originalName}" đã bị từ chối. ${rejectionReason ? 'Lý do: ' + rejectionReason : ''}`,
+            referenceId: doc.contractId,
+            receiverRole: 'USER',
+            receiverId: mockUserId,
+        });
+
+        SSEManager.emitToUser(mockUserId, 'contract_rejected', {
+            notificationId: notification.id,
+            contractId: doc.contractId
         });
 
         return NextResponse.json({ success: true });

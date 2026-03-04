@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 };
 
 import { LanguageProvider } from "@/context/LanguageContext";
-import TopHeader from "@/components/TopHeader";
+import { NotificationProvider } from "@/context/NotificationContext";
+import MainLayout from "@/components/MainLayout";
 
 export default function RootLayout({
   children,
@@ -19,13 +20,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <LanguageProvider>
-          <div className="app-layout">
-            <Sidebar />
-            <main className="main-content">
-              <TopHeader />
-              {children}
-            </main>
-          </div>
+          <NotificationProvider>
+            <div className="app-layout">
+              <Sidebar />
+              <MainLayout>{children}</MainLayout>
+            </div>
+          </NotificationProvider>
         </LanguageProvider>
       </body>
     </html>

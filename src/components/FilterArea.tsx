@@ -151,6 +151,8 @@ export default function FilterArea({
                     font-size: 0.85rem;
                     font-weight: 500;
                     cursor: pointer;
+                    white-space: nowrap;
+                    min-width: 120px;
                 }
                 .filter-btn.active {
                     color: var(--accent-blue);
