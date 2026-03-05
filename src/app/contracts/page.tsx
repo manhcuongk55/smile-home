@@ -1,7 +1,12 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import useSWR from 'swr';
+import { useSearchParams } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
+import CombinedSelect from '@/components/CombinedSelect';
+import FilterArea from '@/components/FilterArea';
+import FilterMoney, { MONEY_RANGES } from '@/components/FilterMoney';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -93,10 +98,7 @@ function approvalBadge(status: string) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-import { useLanguage } from '@/context/LanguageContext';
-import CombinedSelect from '@/components/CombinedSelect';
-import FilterArea from '@/components/FilterArea';
-import FilterMoney, { MONEY_RANGES } from '@/components/FilterMoney';
+
 
 const VIETNAM_PROVINCES = [
     'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau', 'Cần Thơ', 'Cao Bằng', 'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương', 'Hải Phòng', 'Hậu Giang', 'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'TP Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
@@ -138,10 +140,38 @@ export default function ContractsPage() {
     const [uploadProductArea, setUploadProductArea] = useState('');
     const [isUploading, setIsUploading] = useState(false);
 
+    const searchParams = useSearchParams();
+    const contractIdParam = searchParams.get('contractId');
+
     // Detail modal
     const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [previewDocId, setPreviewDocId] = useState<string | null>(null);
+
+    // Grouping & Expansion State
+    const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+
+    // Jump to contract from URL (e.g. from notification)
+    useEffect(() => {
+        if (data && data.length > 0 && contractIdParam) {
+            const found = data.find(c => c.id === contractIdParam);
+            if (found) {
+                setSelectedContract(found);
+                setShowDetailModal(true);
+                // Reset filters to make sure it's visible if the user navigates to the list
+                setStatusFilter('ALL');
+                setSearchTerm('');
+                setSelectedAreas([]);
+                if (found.productName) {
+                    setExpandedProducts(prev => {
+                        const next = new Set(prev);
+                        next.add(found.productName!);
+                        return next;
+                    });
+                }
+            }
+        }
+    }, [data, contractIdParam]);
 
     // Pagination
     const PAGE_SIZE = 6;
@@ -153,6 +183,7 @@ export default function ContractsPage() {
     const [moneyRangeKey, setMoneyRangeKey] = useState('ALL');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [showCommissionAsPercentage, setShowCommissionAsPercentage] = useState(false);
 
     // Rejection details modal
     const [showRejectModal, setShowRejectModal] = useState(false);
@@ -184,6 +215,70 @@ export default function ContractsPage() {
         return matchesArea && matchesSearch && matchesMoney && matchesStatus;
     });
 
+    const groupedContracts = useMemo(() => {
+        const groups: Record<string, {
+            productName: string;
+            agentName: string;
+            totalValue: number;
+            totalCommission: number;
+            items: Contract[];
+        }> = {};
+
+        filteredContracts.forEach(c => {
+            const key = c.productName || 'Unknown Product';
+            if (!groups[key]) {
+                groups[key] = {
+                    productName: key,
+                    agentName: c.person.name,
+                    totalValue: 0,
+                    totalCommission: 0,
+                    items: []
+                };
+            }
+            groups[key].totalValue += c.monthlyRent;
+            groups[key].totalCommission += (c.monthlyRent * 0.1);
+            groups[key].items.push(c);
+        });
+
+        return Object.values(groups);
+    }, [filteredContracts]);
+
+    const toggleExpand = (productName: string) => {
+        const next = new Set(expandedProducts);
+        if (next.has(productName)) next.delete(productName);
+        else next.add(productName);
+        setExpandedProducts(next);
+    };
+
+    // Styling
+    const headerStyle: React.CSSProperties = {
+        padding: '16px 20px',
+        textAlign: 'left',
+        fontSize: '0.75rem',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        color: 'var(--text-muted)',
+        fontWeight: 600
+    };
+
+    const cellStyle: React.CSSProperties = {
+        padding: '20px',
+        fontSize: '0.925rem'
+    };
+
+    const subHeaderStyle: React.CSSProperties = {
+        padding: '12px 16px',
+        textAlign: 'left',
+        fontSize: '0.7rem',
+        textTransform: 'uppercase',
+        color: 'var(--text-muted)',
+        borderBottom: '1px solid var(--border-subtle)'
+    };
+
+    const subCellStyle: React.CSSProperties = {
+        padding: '12px 16px',
+        fontSize: '0.85rem'
+    };
 
     // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -344,7 +439,7 @@ export default function ContractsPage() {
             </div>
 
             {/* ── Unified Contracts Table ── */}
-            <div className="card-container">
+            <div className="card-container" style={{ padding: 0, background: 'transparent', boxShadow: 'none' }}>
                 {contracts.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-icon">📄</div>
@@ -353,128 +448,195 @@ export default function ContractsPage() {
                     </div>
                 ) : (
                     <>
-                        <div className="table-wrapper">
-                            <table className="data-table">
+                        <div className="table-wrapper" style={{ border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--bg-card)' }}>
+                            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
-                                    <tr>
-                                        <th>{t.contracts.colTenant}</th>
-                                        <th>{t.contracts.colProductName}</th>
-                                        <th>{t.contracts.colProductArea}</th>
-                                        <th>{t.contracts.colContractCode}</th>
-                                        <th>{t.contracts.colType}</th>
-                                        <th>{t.contracts.colStatus}</th>
-                                        <th>{t.contracts.colDate}</th>
-                                        <th>{t.contracts.colRent}</th>
-                                        <th>{t.contracts.colActions}</th>
+                                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-subtle)' }}>
+                                        <th style={headerStyle}>{t.contracts.colTenant}</th>
+                                        <th style={headerStyle}>{t.contracts.colProductName}</th>
+                                        <th style={headerStyle}>{t.contracts.colRent}</th>
+                                        <th style={headerStyle}>{t.contracts.colCommission}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredContracts.length === 0 ? (
+                                    {groupedContracts.length === 0 ? (
                                         <tr>
-                                            <td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                                            <td colSpan={4} style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
                                                 {t.contracts.emptyTitle}
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredContracts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((contract) => (
-                                            <tr key={contract.id}>
-                                                <td>
-                                                    <div style={{ fontWeight: 600 }}>{contract.person.name}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                        {contract.person.email || '—'}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div style={{ fontWeight: 600 }}>{contract.productName || '—'}</div>
-                                                </td>
-                                                <td>
-                                                    <div style={{ fontWeight: 600 }}>{contract.productArea || '—'}</div>
-                                                </td>
-                                                <td>
-                                                    <div style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                                        {contract.contractCode && contract.contractCode !== 'TEMP_CODE' 
-                                                            ? contract.contractCode 
-                                                            : contract.id.substring(0, 8).toUpperCase()}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className={`badge ${typeBadge(contract.type)}`}>
-                                                        {t.contracts.types[contract.type as keyof typeof t.contracts.types] || contract.type}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span className={`badge ${statusBadge(contract.status)}`}>
-                                                        {t.contracts.statuses[contract.status as keyof typeof t.contracts.statuses] || contract.status}
-                                                    </span>
-                                                    {contract.status === 'REJECTED' && (
-                                                        <button 
-                                                            className="info-icon" 
-                                                            style={{ 
-                                                                background: 'transparent',
-                                                                border: 'none',
-                                                                color: 'var(--accent-rose)',
-                                                                cursor: 'pointer',
-                                                                padding: '2px',
-                                                                fontSize: '0.9rem',
-                                                                lineHeight: 1,
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                opacity: 0.8
-                                                            }}
-                                                            onClick={() => {
-                                                                setRejectDetails({
-                                                                    note: contract.reviewNote,
-                                                                    by: contract.reviewedBy,
-                                                                    at: contract.reviewedAt
-                                                                });
-                                                                setShowRejectModal(true);
-                                                            }}
-                                                            title={t.contracts.rejectDetailTitle}
-                                                        >
-                                                            ⓘ
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                                <td>
-                                                    <div style={{ fontSize: '0.85rem' }}>
-                                                        {formatDate(contract.createdAt)}
-                                                    </div>
-                                                </td>
-                                                <td style={{ fontWeight: 700 }}>
-                                                    {formatCurrency(contract.monthlyRent)}
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        className="btn btn-sm btn-secondary"
-                                                        onClick={() => {
-                                                            setSelectedContract(contract);
-                                                            setShowDetailModal(true);
+                                        groupedContracts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((group) => {
+                                            const isExpanded = expandedProducts.has(group.productName);
+                                            return (
+                                                <Fragment key={group.productName}>
+                                                    <tr 
+                                                        style={{ 
+                                                            borderBottom: '1px solid var(--border-subtle)',
+                                                            cursor: 'pointer',
+                                                            background: isExpanded ? 'rgba(56, 189, 248, 0.03)' : 'transparent',
+                                                            transition: 'background 0.2s'
                                                         }}
+                                                        onClick={() => toggleExpand(group.productName)}
                                                     >
-                                                        {t.contracts.btnViewDetails}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
+                                                        <td style={cellStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                <div style={{ 
+                                                                    width: '32px', height: '32px', borderRadius: '8px', 
+                                                                    background: 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))',
+                                                                    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                    fontSize: '0.75rem', fontWeight: 800
+                                                                }}>
+                                                                    {group.agentName.substring(0, 2).toUpperCase()}
+                                                                </div>
+                                                                <span style={{ fontWeight: 600 }}>{group.agentName}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td style={cellStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span style={{ 
+                                                                    color: 'var(--accent-blue)', 
+                                                                    fontWeight: 700,
+                                                                    fontSize: '0.95rem',
+                                                                    textDecoration: 'underline',
+                                                                    textDecorationColor: 'rgba(56, 189, 248, 0.3)',
+                                                                    textUnderlineOffset: '4px'
+                                                                }}>
+                                                                    {group.productName}
+                                                                </span>
+                                                                <span style={{ 
+                                                                    fontSize: '0.7rem', 
+                                                                    opacity: 0.5, 
+                                                                    transform: isExpanded ? 'rotate(90deg)' : 'rotate(0)',
+                                                                    transition: 'transform 0.2s'
+                                                                }}>▶</span>
+                                                            </div>
+                                                        </td>
+                                                        <td style={cellStyle}>
+                                                            <div style={{ fontWeight: 700 }}>{formatCurrency(group.totalValue)}</div>
+                                                        </td>
+                                                        <td style={cellStyle}>
+                                                            <span 
+                                                                style={{ 
+                                                                    background: 'rgba(16, 185, 129, 0.1)', 
+                                                                    color: 'var(--accent-emerald)',
+                                                                    padding: '4px 10px',
+                                                                    borderRadius: '20px',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: 700,
+                                                                    cursor: 'pointer',
+                                                                    userSelect: 'none',
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setShowCommissionAsPercentage(!showCommissionAsPercentage);
+                                                                }}
+                                                                title={showCommissionAsPercentage ? "Click to see amount" : "Click to see percentage"}
+                                                            >
+                                                                {showCommissionAsPercentage 
+                                                                    ? `${Math.round((group.totalCommission / group.totalValue) * 100)}%`
+                                                                    : `+ ${formatCurrency(group.totalCommission)}`
+                                                                }
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+
+                                                    {isExpanded && (
+                                                        <tr>
+                                                            <td colSpan={4} style={{ padding: '0 20px 20px 20px', background: 'rgba(255,255,255,0.01)' }}>
+                                                                <div style={{ 
+                                                                    background: 'var(--bg-panel)', 
+                                                                    borderRadius: '12px', 
+                                                                    border: '1px solid var(--border-subtle)',
+                                                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                                                    overflow: 'hidden',
+                                                                    animation: 'slideDown 0.3s ease-out'
+                                                                }}>
+                                                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                                        <thead style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                                                            <tr>
+                                                                                <th style={subHeaderStyle}>{t.contracts.colContractCode}</th>
+                                                                                <th style={subHeaderStyle}>{t.contracts.colType}</th>
+                                                                                <th style={subHeaderStyle}>{t.contracts.colStatus}</th>
+                                                                                <th style={subHeaderStyle}>{t.contracts.colDate}</th>
+                                                                                <th style={subHeaderStyle}>{t.contracts.colActions}</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {group.items.map(item => (
+                                                                                <tr key={item.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                                                                                    <td style={subCellStyle}>
+                                                                                        <code style={{ fontSize: '0.8125rem', color: 'var(--accent-blue)', fontWeight: 700 }}>
+                                                                                            {item.contractCode || item.id.substring(0, 8).toUpperCase()}
+                                                                                        </code>
+                                                                                    </td>
+                                                                                    <td style={subCellStyle}>
+                                                                                        <span className={`badge ${typeBadge(item.type)}`}>
+                                                                                            {t.contracts.types[item.type as keyof typeof t.contracts.types] || item.type}
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td style={subCellStyle}>
+                                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                                            <span className={`badge ${statusBadge(item.status)}`}>
+                                                                                                {t.contracts.statuses[item.status as keyof typeof t.contracts.statuses] || item.status}
+                                                                                            </span>
+                                                                                            {item.status === 'REJECTED' && (
+                                                                                                <button 
+                                                                                                    className="info-icon" 
+                                                                                                    style={{ background: 'transparent', border: 'none', color: 'var(--accent-rose)', cursor: 'pointer', padding: '2px', fontSize: '0.9rem' }}
+                                                                                                    onClick={(e) => {
+                                                                                                        e.stopPropagation();
+                                                                                                        setRejectDetails({ note: item.reviewNote, by: item.reviewedBy, at: item.reviewedAt });
+                                                                                                        setShowRejectModal(true);
+                                                                                                    }}
+                                                                                                >ⓘ</button>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td style={subCellStyle}>
+                                                                                        {formatDate(item.createdAt)}
+                                                                                    </td>
+                                                                                    <td style={subCellStyle}>
+                                                                                        <button
+                                                                                            className="btn btn-sm btn-secondary"
+                                                                                            style={{ fontSize: '0.7rem', height: '28px', padding: '0 12px' }}
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                setSelectedContract(item);
+                                                                                                setShowDetailModal(true);
+                                                                                            }}
+                                                                                        >
+                                                                                            {t.contracts.btnViewDetails}
+                                                                                        </button>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </Fragment>
+                                            )
+                                        })
                                     )}
                                 </tbody>
                             </table>
                         </div>
 
                         {/* ── Pagination ── */}
-                        {Math.ceil(filteredContracts.length / PAGE_SIZE) > 1 && (
+                        {Math.ceil(groupedContracts.length / PAGE_SIZE) > 1 && (
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 padding: '16px 20px',
-                                borderTop: '1px solid var(--border-subtle)',
+                                borderTop: 'none',
                             }}>
                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                    {t.contracts.paginationShowing} {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredContracts.length)} {t.contracts.paginationOf} {filteredContracts.length}
+                                    {t.contracts.paginationShowing} {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, groupedContracts.length)} {t.contracts.paginationOf} {groupedContracts.length}
                                 </span>
                                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                                     <button
@@ -484,7 +646,7 @@ export default function ContractsPage() {
                                     >
                                         {t.contracts.paginationPrev}
                                     </button>
-                                    {Array.from({ length: Math.ceil(filteredContracts.length / PAGE_SIZE) }, (_, i) => i + 1).map(page => (
+                                    {Array.from({ length: Math.ceil(groupedContracts.length / PAGE_SIZE) }, (_, i) => i + 1).map(page => (
                                         <button
                                             key={page}
                                             className="btn btn-sm"
@@ -501,8 +663,8 @@ export default function ContractsPage() {
                                     ))}
                                     <button
                                         className="btn btn-sm btn-secondary"
-                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredContracts.length / PAGE_SIZE), p + 1))}
-                                        disabled={currentPage === Math.ceil(filteredContracts.length / PAGE_SIZE)}
+                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(groupedContracts.length / PAGE_SIZE), p + 1))}
+                                        disabled={currentPage === Math.ceil(groupedContracts.length / PAGE_SIZE)}
                                     >
                                         {t.contracts.paginationNext}
                                     </button>
@@ -548,32 +710,7 @@ export default function ContractsPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>{t.contracts.labelRoomNumber}</label>
-                                        <input
-                                            type="text"
-                                            className="form-input"
-                                            placeholder={t.contracts.placeholderRoom}
-                                            value={uploadRoomNumber}
-                                            onChange={(e) => setUploadRoomNumber(e.target.value)}
-                                            required
-                                            disabled={isUploading}
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>{t.contracts.labelBuilding}</label>
-                                        <input
-                                            type="text"
-                                            className="form-input"
-                                            placeholder={t.contracts.placeholderBuilding}
-                                            value={uploadBuildingName}
-                                            onChange={(e) => setUploadBuildingName(e.target.value)}
-                                            required
-                                            disabled={isUploading}
-                                        />
-                                    </div>
-                                </div>
+
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label>{t.contracts.labelProductName}</label>
@@ -583,6 +720,7 @@ export default function ContractsPage() {
                                             placeholder={t.contracts.placeholderProductName}
                                             value={uploadProductName}
                                             onChange={(e) => setUploadProductName(e.target.value)}
+                                            required
                                             disabled={isUploading}
                                         />
                                     </div>
@@ -757,20 +895,16 @@ export default function ContractsPage() {
                                 <div className="detail-section">
                                     <div className="detail-section-title">{t.contracts.sectionAsset}</div>
                                     <div className="detail-field">
+                                        <div className="detail-field-label">{t.contracts.colContractCode}</div>
+                                        <div className="detail-field-value" style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>{selectedContract.contractCode}</div>
+                                    </div>
+                                    <div className="detail-field">
                                         <div className="detail-field-label">{t.contracts.colProductName}</div>
                                         <div className="detail-field-value">{selectedContract.productName || '—'}</div>
                                     </div>
                                     <div className="detail-field">
                                         <div className="detail-field-label">{t.contracts.colProductArea}</div>
                                         <div className="detail-field-value">{selectedContract.productArea || '—'}</div>
-                                    </div>
-                                    <div className="detail-field">
-                                        <div className="detail-field-label">{t.contracts.labelBuildingName}</div>
-                                        <div className="detail-field-value">{selectedContract.room.building.name}</div>
-                                    </div>
-                                    <div className="detail-field">
-                                        <div className="detail-field-label">{t.contracts.labelRoomNo}</div>
-                                        <div className="detail-field-value">{selectedContract.room.number}</div>
                                     </div>
                                 </div>
 
@@ -802,12 +936,18 @@ export default function ContractsPage() {
                                 </div>
 
                                 {/* 4) FINANCE CARD */}
-                                <div className="detail-section">
+                                    <div className="detail-section">
                                     <div className="detail-section-title">{t.contracts.sectionFinancials}</div>
                                     <div className="detail-field">
                                         <div className="detail-field-label">{t.contracts.labelRentAmount}</div>
                                         <div className="detail-field-value" style={{ fontWeight: 600, fontSize: '1.1rem', color: '#fff' }}>
                                             {formatCurrency(selectedContract.monthlyRent)}
+                                        </div>
+                                    </div>
+                                    <div className="detail-field">
+                                        <div className="detail-field-label">{t.admin.labelCommission}</div>
+                                        <div className="detail-field-value" style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>
+                                            {formatCurrency(selectedContract.monthlyRent * 0.1)}
                                         </div>
                                     </div>
                                 </div>

@@ -61,18 +61,19 @@ export async function POST(req: Request) {
         if (!tenantName) {
             return NextResponse.json({ error: 'Tenant name is required' }, { status: 400 });
         }
-        if (!roomNumber) {
-            return NextResponse.json({ error: 'Room number is required' }, { status: 400 });
+        const productName = (formData.get('productName') as string | null)?.trim() || null;
+        const productArea = (formData.get('productArea') as string | null)?.trim() || null;
+
+        if (!productName) {
+            return NextResponse.json({ error: 'Product name is required' }, { status: 400 });
         }
-        if (!buildingName) {
-            return NextResponse.json({ error: 'Building name is required' }, { status: 400 });
+        if (!productArea) {
+            return NextResponse.json({ error: 'Product area is required' }, { status: 400 });
         }
+
         if (!monthlyRentRaw || isNaN(Number(monthlyRentRaw)) || Number(monthlyRentRaw) < 0) {
             return NextResponse.json({ error: 'Monthly rent is required and must be >= 0' }, { status: 400 });
         }
-
-        const productName = (formData.get('productName') as string | null)?.trim() || null;
-        const productArea = (formData.get('productArea') as string | null)?.trim() || null;
         const parsedMonthlyRent = parseFloat(monthlyRentRaw);
 
         // ── Upload files ──────────────────────────────────────────────────────
@@ -96,7 +97,8 @@ export async function POST(req: Request) {
             }
 
             // 2. Find or create Building
-            let building = await tx.building.findFirst({ where: { name: buildingName } });
+            const finalBuildingName = buildingName || '-';
+            let building = await tx.building.findFirst({ where: { name: finalBuildingName } });
             if (!building) {
                 let property = await tx.property.findFirst();
                 if (!property) {
@@ -106,20 +108,21 @@ export async function POST(req: Request) {
                 }
                 building = await tx.building.create({
                     data: {
-                        name: buildingName,
+                        name: finalBuildingName,
                         propertyId: property.id,
                     },
                 });
             }
 
             // 3. Find or create Room
+            const finalRoomNumber = roomNumber || '-';
             let room = await tx.room.findFirst({
-                where: { number: roomNumber, buildingId: building.id },
+                where: { number: finalRoomNumber, buildingId: building.id },
             });
             if (!room) {
                 room = await tx.room.create({
                     data: {
-                        number: roomNumber,
+                        number: finalRoomNumber,
                         buildingId: building.id,
                     },
                 });

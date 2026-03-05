@@ -103,8 +103,8 @@ export default function NotificationBell() {
                 refreshUnreadCount();
                 if (referenceId) {
                     const path = userRole === 'ADMIN' 
-                        ? `/admin/contracts?id=${referenceId}` 
-                        : `/contracts?id=${referenceId}`;
+                        ? `/admin/contracts?contractId=${referenceId}` 
+                        : `/contracts?contractId=${referenceId}`;
                     router.push(path);
                     setIsOpen(false);
                 }

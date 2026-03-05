@@ -41,9 +41,12 @@ export default function FilterArea({
     );
 
     const toggleOption = (opt: string) => {
-        setTempSelected(prev => 
-            prev.includes(opt) ? prev.filter(v => v !== opt) : [...prev, opt]
-        );
+        const next = tempSelected.includes(opt) 
+            ? tempSelected.filter(v => v !== opt) 
+            : [...tempSelected, opt];
+        
+        setTempSelected(next);
+        onApply(next); // Apply instantly
     };
 
     const handleClear = (e?: React.MouseEvent) => {
@@ -112,14 +115,7 @@ export default function FilterArea({
                         )}
                     </div>
 
-                    <div className="filter-footer">
-                        <button className="clear-btn" onClick={handleClear}>
-                            {t.contracts.filterClear}
-                        </button>
-                        <button className="apply-btn" onClick={handleApply}>
-                            {t.contracts.filterApply}
-                        </button>
-                    </div>
+
                 </div>
             )}
 

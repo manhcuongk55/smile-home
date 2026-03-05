@@ -7,12 +7,7 @@ export const runtime = 'nodejs';
 async function getPendingCount() {
     return await prisma.contract.count({
         where: {
-            documents: {
-                some: {
-                    documentType: 'CONTRACT',
-                    approvalStatus: 'PENDING'
-                }
-            }
+            status: 'PENDING'
         }
     });
 }

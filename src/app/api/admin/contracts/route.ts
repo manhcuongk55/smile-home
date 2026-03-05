@@ -16,14 +16,13 @@ export async function GET(req: NextRequest) {
 
         const where: any = {};
 
-        // 1. Filter by status (linked to main document approvalStatus)
+        // 1. Filter by status
         if (status !== 'ALL') {
-             where.documents = {
-                 some: {
-                     documentType: 'CONTRACT',
-                     approvalStatus: status
-                 }
-             };
+            if (status === 'APPROVED') {
+                where.status = 'ACTIVE';
+            } else {
+                where.status = status;
+            }
         }
 
         // 2. Filter by money range
@@ -65,12 +64,7 @@ export async function GET(req: NextRequest) {
             prisma.contract.count({ where }),
             prisma.contract.count({
                 where: {
-                    documents: {
-                        some: {
-                            documentType: 'CONTRACT',
-                            approvalStatus: 'PENDING'
-                        }
-                    }
+                    status: 'PENDING'
                 }
             })
         ]);

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import { approveContract, rejectContract } from './actions';
-import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 
-const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then(res => res.json());
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 interface ContractDocument {
     id: string;
@@ -20,6 +20,7 @@ interface ContractDocument {
 
 interface Contract {
     id: string;
+    contractCode: string; // Added contractCode
     room: {
         number: string;
         building: { name: string };
@@ -29,7 +30,6 @@ interface Contract {
     productArea?: string;
     type: string;
     status: string;
-    contractCode: string; // New field
     monthlyRent: number;
     createdAt: string;
     documents: ContractDocument[];
@@ -55,9 +55,7 @@ const MONEY_RANGES = [
 
 export default function AdminContractReview() {
     const { t } = useLanguage();
-    const searchParams = useSearchParams();
-    const urlContractId = searchParams.get('id');
-
+    
     // States for filtering
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [moneyRangeKey, setMoneyRangeKey] = useState('ALL');
@@ -66,21 +64,11 @@ export default function AdminContractReview() {
     const [page, setPage] = useState(1);
 
     // Page state for UI
-    const [selectedContractId, setSelectedContractId] = useState<string | null>(urlContractId);
+    const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
     const [reviewNote, setReviewNote] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [previewDocType, setPreviewDocType] = useState<'CONTRACT' | 'PRODUCT_DETAIL'>('CONTRACT');
-
-    // Update selected ID if URL changes
-    useEffect(() => {
-        if (urlContractId) {
-            setSelectedContractId(urlContractId);
-            setFilterStatus('ALL'); // Reset filter to make sure it's visible
-            setSearchQuery('');     // Clear search
-            setMoneyRangeKey('ALL'); // Clear money range
-            setPage(1);             // Go to first page
-        }
-    }, [urlContractId]);
+    const [showCommissionAsPercentage, setShowCommissionAsPercentage] = useState(false);
 
     // Debounce search
     useEffect(() => {
@@ -114,30 +102,24 @@ export default function AdminContractReview() {
     const contracts = data?.contracts || [];
     const pendingCount = data?.pendingCount || 0;
 
-    // Real-time update listener
-    useEffect(() => {
-        const eventSource = new EventSource('/api/admin/contracts/pending-count/stream');
-        
-        eventSource.onmessage = () => {
-            mutate();
-        };
-
-        eventSource.onerror = (err) => {
-            console.error('SSE connection error in AdminContracts:', err);
-            eventSource.close();
-        };
-
-        return () => {
-            eventSource.close();
-        };
-    }, [mutate]);
+    const searchParams = useSearchParams();
+    const contractIdParam = searchParams.get('contractId');
 
     // Auto-select logic
     useEffect(() => {
-        if (!isLoading && contracts.length > 0 && (!selectedContractId || !contracts.some(c => c.id === selectedContractId))) {
-            setSelectedContractId(contracts[0].id);
+        if (!isLoading && contracts.length > 0) {
+            if (contractIdParam && contracts.some(c => c.id === contractIdParam)) {
+                // If there's a contractId in URL and it exists in data, select it
+                setSelectedContractId(contractIdParam);
+                setFilterStatus('ALL'); // Reset filter to make sure it shows up
+                setSearchQuery(''); 
+                setMoneyRangeKey('ALL');
+            } else if (!selectedContractId || !contracts.some(c => c.id === selectedContractId)) {
+                // Otherwise fall back to first one
+                setSelectedContractId(contracts[0].id);
+            }
         }
-    }, [contracts, selectedContractId, isLoading]);
+    }, [contracts, selectedContractId, isLoading, contractIdParam]);
 
     const selectedContract = contracts.find(c => c.id === selectedContractId) || null;
 
@@ -249,7 +231,7 @@ export default function AdminContractReview() {
 
                         <div style={{ fontSize: '0.6875rem', color: '#6B7280', fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
                             <span>{pendingCount} {t.admin.statPending}</span>
-                            {data && <span>{data.total} {t.admin.statTotal}</span>}
+                            {data && <span>{data.total} {t.admin.colAction}</span>}
                         </div>
                     </div>
 
@@ -275,7 +257,7 @@ export default function AdminContractReview() {
                                         }}
                                         style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}
                                     >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                                             <span className={`badge-fixed ${status === 'PENDING' ? 'badge-yellow' : status === 'APPROVED' ? 'badge-green' : status === 'REJECTED' ? 'badge-red' : 'badge-yellow'}`} style={{ margin: 0 }}>
                                                 {t.contracts.approvals[status as keyof typeof t.contracts.approvals] || status}
                                             </span>
@@ -283,23 +265,30 @@ export default function AdminContractReview() {
                                                 {new Date(c.createdAt).toLocaleDateString()}
                                             </span>
                                         </div>
-
-                                        <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--admin-text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>
+                                        <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--admin-text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {c.productName || '—'}
                                         </div>
-
-                                        <div style={{ fontWeight: 600, fontSize: '0.75rem', color: 'var(--admin-accent-blue)', fontFamily: 'monospace', marginBottom: '4px' }}>
-                                            {c.contractCode && c.contractCode !== 'TEMP_CODE' ? c.contractCode : c.id.substring(0, 8).toUpperCase()}
-                                        </div>
-
-                                        <div style={{ fontSize: '0.8125rem', color: 'var(--admin-text-muted)' }}>
-                                            {c.productArea || '—'}
-                                        </div>
-                                        <div style={{ fontSize: '0.8125rem', color: 'var(--admin-text-muted)' }}>
-                                            {t.contracts.types[c.type as keyof typeof t.contracts.types] || c.type}
-                                        </div>
-                                        <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--admin-text-main)', marginTop: '4px' }}>
-                                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.monthlyRent)}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '4px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <div 
+                                                    style={{ fontSize: '0.75rem', color: 'var(--admin-text-muted)', cursor: 'pointer', userSelect: 'none' }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Don't select the contract when clicking the commission label
+                                                        setShowCommissionAsPercentage(!showCommissionAsPercentage);
+                                                    }}
+                                                    title={showCommissionAsPercentage ? "Click to see amount" : "Click to see percentage"}
+                                                >
+                                                    {t.admin.labelCommission}: <span style={{ color: 'var(--admin-accent-green)', fontWeight: 600 }}>
+                                                        {showCommissionAsPercentage 
+                                                            ? "10%" 
+                                                            : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.monthlyRent * 0.1)
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--admin-text-main)' }}>
+                                                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.monthlyRent)}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -315,25 +304,12 @@ export default function AdminContractReview() {
                             <div className="detail-section-info">
                                 <div className="grid-3">
                                     <div>
-                                        <div className="data-label">{t.contracts.labelTenantName}</div>
-                                        <div className="data-value">{selectedContract.person.name}</div>
-                                    </div>
-                                    <div>
-                                        <div className="data-label">{t.contracts.labelTenantEmail}</div>
-                                        <div className="data-value">{selectedContract.person.email || '—'}</div>
+                                        <div className="data-label">{t.contracts.labelRoomNo}</div>
+                                        <div className="data-value" style={{ fontWeight: 600, color: 'var(--admin-accent-blue)' }}>{selectedContract.contractCode}</div>
                                     </div>
                                     <div>
                                         <div className="data-label">{t.contracts.labelProductName}</div>
                                         <div className="data-value">{selectedContract.productName || '—'}</div>
-                                    </div>
-
-                                    <div>
-                                        <div className="data-label">{t.contracts.colContractCode}</div>
-                                        <div className="data-value" style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--admin-accent-blue)' }}>
-                                            {selectedContract.contractCode && selectedContract.contractCode !== 'TEMP_CODE' 
-                                                ? selectedContract.contractCode 
-                                                : selectedContract.id.substring(0, 8).toUpperCase()}
-                                        </div>
                                     </div>
                                     <div>
                                         <div className="data-label">{t.contracts.labelRent}</div>
@@ -341,14 +317,38 @@ export default function AdminContractReview() {
                                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedContract.monthlyRent)}
                                         </div>
                                     </div>
+
                                     <div>
                                         <div className="data-label">{t.contracts.labelProductArea}</div>
                                         <div className="data-value">{selectedContract.productArea || '—'}</div>
                                     </div>
+                                    <div>
+                                        <div className="data-label">{t.contracts.labelTenantName}</div>
+                                        <div className="data-value">{selectedContract.person.name}</div>
+                                    </div>
+                                    <div>
+                                        <div className="data-label">{t.admin.labelCommission}</div>
+                                        <div 
+                                            className="data-value" 
+                                            style={{ 
+                                                color: 'var(--admin-accent-green)', 
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                userSelect: 'none'
+                                            }}
+                                            onClick={() => setShowCommissionAsPercentage(!showCommissionAsPercentage)}
+                                            title={showCommissionAsPercentage ? "Click to see amount" : "Click to see percentage"}
+                                        >
+                                            {showCommissionAsPercentage 
+                                                ? "10%" 
+                                                : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedContract.monthlyRent * 0.1)
+                                            }
+                                        </div>
+                                    </div>
 
                                     <div>
-                                        <div className="data-label">{t.contracts.labelBuilding}</div>
-                                        <div className="data-value">{selectedContract.room.building.name}</div>
+                                        <div className="data-label">{t.contracts.labelTenantEmail}</div>
+                                        <div className="data-value">{selectedContract.person.email || '—'}</div>
                                     </div>
                                     <div>
                                         <div className="data-label">{t.contracts.labelUploadDate}</div>

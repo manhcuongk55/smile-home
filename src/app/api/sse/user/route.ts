@@ -55,6 +55,7 @@ export async function GET(req: Request) {
                 'Connection': 'keep-alive',
                 'X-Accel-Buffering': 'no',
                 'Pragma': 'no-cache',
+                'Content-Encoding': 'identity',
             }
         });
 

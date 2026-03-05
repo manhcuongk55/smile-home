@@ -7,12 +7,7 @@ export async function GET() {
     try {
         const count = await prisma.contract.count({
             where: {
-                documents: {
-                    some: {
-                        documentType: 'CONTRACT',
-                        approvalStatus: 'PENDING'
-                    }
-                }
+                status: 'PENDING'
             }
         });
         return NextResponse.json({ count });
