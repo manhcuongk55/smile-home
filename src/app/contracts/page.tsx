@@ -284,7 +284,7 @@ export default function ContractsPage() {
 
     async function handleUpload(e: React.FormEvent) {
         e.preventDefault();
-        if (!uploadFile || !uploadProductFile || !uploadTenantName.trim() || !uploadRoomNumber.trim() || !uploadBuildingName.trim() || !uploadMonthlyRent) {
+        if (!uploadFile || !uploadProductFile || !uploadTenantName.trim() || !uploadProductName.trim() || !uploadProductArea.trim() || !uploadMonthlyRent) {
             alert(t.contracts.alertRequired);
             return;
         }
@@ -849,8 +849,8 @@ export default function ContractsPage() {
                                         !uploadFile ||
                                         !uploadProductFile ||
                                         !uploadTenantName.trim() ||
-                                        !uploadRoomNumber.trim() ||
-                                        !uploadBuildingName.trim() ||
+                                        !uploadProductName.trim() ||
+                                        !uploadProductArea.trim() ||
                                         !uploadMonthlyRent ||
                                         isUploading
                                     }

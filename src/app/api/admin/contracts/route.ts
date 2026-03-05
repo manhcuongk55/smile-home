@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
         const minAmount = searchParams.get('minAmount');
         const maxAmount = searchParams.get('maxAmount');
         const search = searchParams.get('search');
+        const areas = searchParams.get('areas'); // Get areas filter
         
         // Pagination
         const page = parseInt(searchParams.get('page') || '1');
@@ -25,14 +26,22 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        // 2. Filter by money range
+        // 2. Filter by areas
+        if (areas) {
+            const areaList = areas.split(',').filter(Boolean);
+            if (areaList.length > 0) {
+                where.productArea = { in: areaList };
+            }
+        }
+
+        // 3. Filter by money range
         if (minAmount !== null || maxAmount !== null) {
             where.monthlyRent = {};
             if (minAmount) where.monthlyRent.gte = parseFloat(minAmount);
             if (maxAmount) where.monthlyRent.lte = parseFloat(maxAmount);
         }
 
-        // 3. Search keyword
+        // 4. Search keyword
         if (search) {
              where.OR = [
                  { id: { contains: search } },

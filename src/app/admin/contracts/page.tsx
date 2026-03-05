@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import { approveContract, rejectContract } from './actions';
 import useSWR from 'swr';
+import FilterArea from '@/components/FilterArea';
+
+const VIETNAM_PROVINCES = [
+    'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu', 'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau', 'Cần Thơ', 'Cao Bằng', 'Đà Nẵng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Nội', 'Hà Tĩnh', 'Hải Dương', 'Hải Phòng', 'Hậu Giang', 'Hòa Bình', 'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'TP Hồ Chí Minh', 'Trà Vinh', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
+];
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -69,6 +74,7 @@ export default function AdminContractReview() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [previewDocType, setPreviewDocType] = useState<'CONTRACT' | 'PRODUCT_DETAIL'>('CONTRACT');
     const [showCommissionAsPercentage, setShowCommissionAsPercentage] = useState(false);
+    const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
 
     // Debounce search
     useEffect(() => {
@@ -89,6 +95,7 @@ export default function AdminContractReview() {
     });
     if (selectedRange?.min !== null) queryParams.append('minAmount', selectedRange!.min.toString());
     if (selectedRange?.max !== null) queryParams.append('maxAmount', selectedRange!.max.toString());
+    if (selectedAreas.length > 0) queryParams.append('areas', selectedAreas.join(','));
 
     const { data, mutate, isLoading } = useSWR<AdminContractsResponse>(
         `/api/admin/contracts?${queryParams.toString()}`, 
@@ -212,20 +219,35 @@ export default function AdminContractReview() {
                                 ))}
                             </div>
 
-                            {/* Money Range Dropdown */}
-                            <div style={{ position: 'relative' }}>
-                                <select 
-                                    className="admin-input"
-                                    value={moneyRangeKey}
-                                    onChange={(e) => { setMoneyRangeKey(e.target.value); setPage(1); }}
-                                    style={{ fontSize: '0.75rem', padding: '6px 12px', height: 'auto', background: '#F9FAFB' }}
-                                >
-                                    {MONEY_RANGES.map(range => (
-                                        <option key={range.key} value={range.key}>
-                                            {t.admin.moneyRanges[range.key as keyof typeof t.admin.moneyRanges]}
-                                        </option>
-                                    ))}
-                                </select>
+                            {/* Filters Row */}
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {/* Area Filter */}
+                                <div style={{ flex: 1 }}>
+                                    <FilterArea 
+                                        options={VIETNAM_PROVINCES}
+                                        selectedValues={selectedAreas}
+                                        onApply={(areas) => {
+                                            setSelectedAreas(areas);
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Money Range Dropdown */}
+                                <div style={{ flex: 1, position: 'relative' }}>
+                                    <select 
+                                        className="admin-input"
+                                        value={moneyRangeKey}
+                                        onChange={(e) => { setMoneyRangeKey(e.target.value); setPage(1); }}
+                                        style={{ fontSize: '0.75rem', padding: '6px 12px', height: '100%', background: '#F9FAFB' }}
+                                    >
+                                        {MONEY_RANGES.map(range => (
+                                            <option key={range.key} value={range.key}>
+                                                {t.admin.moneyRanges[range.key as keyof typeof t.admin.moneyRanges]}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
 

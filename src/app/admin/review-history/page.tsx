@@ -151,7 +151,7 @@ export default function AdminReviewHistory() {
                     <input 
                         type="search"
                         className="admin-input"
-                        placeholder={t.admin.labelSearchHistory}
+                        placeholder={(t.admin as any).placeholderSearchHistory}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
