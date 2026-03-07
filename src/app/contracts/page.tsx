@@ -32,10 +32,17 @@ interface Person {
     name: string;
 }
 
+interface SalesTeamOption {
+    id: string;
+    code: string;
+    name: string;
+}
+
 export default function ContractsPage() {
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [persons, setPersons] = useState<Person[]>([]);
+    const [salesTeams, setSalesTeams] = useState<SalesTeamOption[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newContract, setNewContract] = useState({
         roomId: '',
@@ -46,6 +53,7 @@ export default function ContractsPage() {
         monthlyRent: 0,
         deposit: 0,
         status: 'DRAFT',
+        salesTeamId: '',
     });
     const [toastMsg, setToastMsg] = useState('');
     const { t } = useLanguage();
@@ -54,6 +62,7 @@ export default function ContractsPage() {
         fetchContracts();
         fetchRooms();
         fetchPersons();
+        fetchSalesTeams();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function fetchContracts() {
@@ -72,6 +81,12 @@ export default function ContractsPage() {
         const res = await fetch('/api/persons');
         const data = await res.json();
         setPersons(Array.isArray(data) ? data : []);
+    }
+
+    async function fetchSalesTeams() {
+        const res = await fetch('/api/sales-teams');
+        const data = await res.json();
+        setSalesTeams(Array.isArray(data) ? data : []);
     }
 
     async function handleCreate(e: React.FormEvent) {
@@ -93,6 +108,7 @@ export default function ContractsPage() {
                     monthlyRent: 0,
                     deposit: 0,
                     status: 'DRAFT',
+                    salesTeamId: '',
                 });
                 setToastMsg(t('contractCreated'));
                 fetchContracts();
@@ -311,17 +327,32 @@ export default function ContractsPage() {
                                         <option value="MANAGEMENT">{t('managementAgreement')}</option>
                                     </select>
                                 </div>
-                                <div className="form-group">
-                                    <label>{t('initialStatusLabel')}</label>
-                                    <select
-                                        className="form-select"
-                                        value={newContract.status}
-                                        onChange={(e) => setNewContract({ ...newContract, status: e.target.value })}
-                                    >
-                                        <option value="DRAFT">{t('draft')}</option>
-                                        <option value="PENDING_REVIEW">{t('pendingReview')}</option>
-                                        <option value="ACTIVE">{t('activeImmediate')}</option>
-                                    </select>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>{t('initialStatusLabel')}</label>
+                                        <select
+                                            className="form-select"
+                                            value={newContract.status}
+                                            onChange={(e) => setNewContract({ ...newContract, status: e.target.value })}
+                                        >
+                                            <option value="DRAFT">{t('draft')}</option>
+                                            <option value="PENDING_REVIEW">{t('pendingReview')}</option>
+                                            <option value="ACTIVE">{t('activeImmediate')}</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>💸 {t('commissions')}</label>
+                                        <select
+                                            className="form-select"
+                                            value={newContract.salesTeamId}
+                                            onChange={(e) => setNewContract({ ...newContract, salesTeamId: e.target.value })}
+                                        >
+                                            <option value="">— {t('allTeams')} —</option>
+                                            {salesTeams.map((st) => (
+                                                <option key={st.id} value={st.id}>{st.code} — {st.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div className="modal-footer">

@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
                 endDate: new Date(body.endDate),
                 monthlyRent: body.monthlyRent || 0,
                 deposit: body.deposit || 0,
+                salesTeamId: body.salesTeamId || null,
             },
         });
         return NextResponse.json(contract, { status: 201 });

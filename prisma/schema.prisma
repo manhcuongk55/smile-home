@@ -138,11 +138,17 @@ model Contract {
   endDate     DateTime
   monthlyRent Float    @default(0)
   deposit     Float    @default(0)
+  
+  // Sales Commission
+  salesTeamId String?
+  salesTeam   SalesTeam? @relation(fields: [salesTeamId], references: [id], onDelete: SetNull)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   invoices     Invoice[]
   interactions Interaction[]
+  commissions  Commission[]
 }
 
 model Invoice {
@@ -269,4 +275,38 @@ model ActivityLog {
   newValue    String?  // JSON snapshot
   note        String?
   timestamp   DateTime @default(now())
+}
+
+model SalesTeam {
+  id             String       @id @default(cuid())
+  code           String       @unique // Mã đội sale: "SALE-A1", "SALE-B2"
+  name           String                // Tên đội sale
+  leader         String?               // Trưởng nhóm
+  phone          String?
+  commissionRate Float        @default(5)  // Tỷ lệ hoa hồng mặc định (%)
+  bonusTarget    Float        @default(0)  // KPI thưởng (VND)
+  bonusRate      Float        @default(0)  // % thưởng thêm khi đạt KPI
+  status         String       @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  contracts      Contract[]
+  commissions    Commission[]
+}
+
+model Commission {
+  id            String    @id @default(cuid())
+  salesTeamId   String
+  salesTeam     SalesTeam @relation(fields: [salesTeamId], references: [id], onDelete: Cascade)
+  contractId    String
+  contract      Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  month         DateTime  // Tháng tính hoa hồng (ngày đầu tháng)
+  contractValue Float     // Giá trị HĐ (monthlyRent)
+  rate          Float     // % hoa hồng áp dụng
+  amount        Float     // Số tiền HH = contractValue × rate / 100
+  bonusAmount   Float     @default(0) // Thưởng thi đua
+  totalPayout   Float     // amount + bonusAmount
+  status        String    @default("PENDING") // PENDING, APPROVED, PAID
+  note          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }

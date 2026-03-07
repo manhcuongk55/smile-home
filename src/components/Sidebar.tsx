@@ -26,6 +26,7 @@ export default function Sidebar() {
                 { href: '/properties', label: t('properties'), icon: '🏢' },
                 { href: '/contracts', label: t('contracts'), icon: '📄' },
                 { href: '/invoices', label: t('invoices'), icon: '💰' },
+                { href: '/commissions', label: t('commissions'), icon: '💸' },
                 { href: '/maintenance', label: t('maintenance'), icon: '🔧' },
                 { href: '/utilities', label: t('utilities'), icon: '⚡' },
             ]
