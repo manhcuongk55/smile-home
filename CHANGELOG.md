@@ -1,5 +1,21 @@
 # CHANGELOG — Smile Home / Xgate Property OS
 
+## v1.3.0 — Activity History (Lịch Sử Hoạt Động)
+**Deploy:** 2026-03-07 | **Commit:** `52a30e8` | **Branch:** `main`
+
+### ✨ Tính năng mới
+- **Trang Lịch Sử Hoạt Động** — `/activity`
+  - Timeline UI premium với dot indicators theo màu action
+  - Bấm vào mỗi dòng → xem chi tiết giá trị cũ/mới (JSON diff)
+  - Lọc theo: Loại đối tượng, Hành động, Khoảng ngày
+  - Stats: Tổng bản ghi, Hôm nay, Loại đối tượng, Người dùng
+- **Auto-logging**: Hợp đồng, Đội Sale, Hóa đơn → tự ghi lịch sử
+- **i18n**: ~60 keys mới (EN + VI)
+
+### 📁 Files changed: 7 files (+475 lines)
+
+---
+
 ## v1.2.0 — Sales Commission (Hoa Hồng) System
 **Deploy:** 2026-03-07 | **Commit:** `6c75f24` | **Branch:** `main`
 
