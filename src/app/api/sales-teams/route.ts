@@ -44,6 +44,19 @@ export async function POST(request: NextRequest) {
                 status: body.status || 'ACTIVE',
             },
         });
+
+        // Auto-log
+        await prisma.activityLog.create({
+            data: {
+                entityType: 'SalesTeam',
+                entityId: team.id,
+                action: 'CREATE',
+                performedBy: 'ADMIN',
+                newValue: JSON.stringify({ code: team.code, name: team.name, commissionRate: team.commissionRate }),
+                note: `Sales team ${team.code} created`,
+            },
+        });
+
         return NextResponse.json(team, { status: 201 });
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';

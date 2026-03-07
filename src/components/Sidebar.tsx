@@ -35,6 +35,7 @@ export default function Sidebar() {
             section: t('analytics'),
             items: [
                 { href: '/reports', label: t('financialReports'), icon: '📈' },
+                { href: '/activity', label: t('activityHistory'), icon: '📜' },
             ]
         },
     ];

@@ -30,6 +30,19 @@ export async function POST(request: NextRequest) {
                 salesTeamId: body.salesTeamId || null,
             },
         });
+
+        // Auto-log activity
+        await prisma.activityLog.create({
+            data: {
+                entityType: 'Contract',
+                entityId: contract.id,
+                action: 'CREATE',
+                performedBy: 'ADMIN',
+                newValue: JSON.stringify({ type: contract.type, status: contract.status, monthlyRent: contract.monthlyRent, salesTeamId: contract.salesTeamId }),
+                note: `New ${contract.type} contract created`,
+            },
+        });
+
         return NextResponse.json(contract, { status: 201 });
     } catch (error) {
         console.error('Failed to create contract:', error);
