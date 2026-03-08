@@ -344,6 +344,21 @@ export const translations = {
         minutesAgo: 'min ago',
         hoursAgo: 'hours ago',
         daysAgo: 'days ago',
+
+        // Rent Reminders
+        rentReminders: 'Rent Reminders',
+        rentRemindersSubtitle: 'Track overdue payments and send reminders',
+        totalRoomsActive: 'Active Rooms',
+        paidRooms: 'Paid',
+        pendingPayment: 'Pending',
+        overduePayment: 'Overdue',
+        totalOwedAmount: 'Total Owed',
+        collectionProgress: 'Collection Progress',
+        allRooms: 'All Rooms',
+        overdueOnly: 'Overdue',
+        unpaidOnly: 'Unpaid',
+        allPaid: 'All rooms paid!',
+        allPaidDesc: 'Everyone has paid on time. Great job!',
     },
     vi: {
         // Sidebar
@@ -688,5 +703,20 @@ export const translations = {
         minutesAgo: 'phút trước',
         hoursAgo: 'giờ trước',
         daysAgo: 'ngày trước',
+
+        // Rent Reminders (VI)
+        rentReminders: 'Nhắc Tiền Phòng',
+        rentRemindersSubtitle: 'Theo dõi nợ quá hạn và gửi nhắc nhở',
+        totalRoomsActive: 'Phòng Hoạt Động',
+        paidRooms: 'Đã Trả',
+        pendingPayment: 'Chờ Trả',
+        overduePayment: 'Quá Hạn',
+        totalOwedAmount: 'Tổng Còn Nợ',
+        collectionProgress: 'Tiến Độ Thu',
+        allRooms: 'Tất Cả Phòng',
+        overdueOnly: 'Quá Hạn',
+        unpaidOnly: 'Chưa Trả',
+        allPaid: 'Tất cả phòng đã thanh toán!',
+        allPaidDesc: 'Mọi người đã đóng đúng hạn. Tuyệt vời!',
     },
 };
