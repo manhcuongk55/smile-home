@@ -1,5 +1,21 @@
 # CHANGELOG — Smile Home / Xgate Property OS
 
+## v1.4.0 — Nhắc Tiền Phòng (Rent Reminders)
+**Deploy:** 2026-03-08 | **Commit:** `d3ad7a2` | **Branch:** `main`
+
+### ✨ Tính năng mới
+- **Trang Nhắc Tiền Phòng** — `/rent-reminders`
+  - Dashboard tổng quan: phòng đã trả / chờ trả / quá hạn
+  - Progress bar tiến độ thu tiền (% rooms paid)
+  - Filter tabs: Tất cả / Quá hạn / Chưa trả
+  - Nút **📋 Copy nhắc nhở** → tạo tin nhắn Zalo/SMS tự động
+  - Hiển thị: tên khách, SĐT, tiền phòng, số ngày quá hạn
+- **i18n**: ~30 keys mới (EN + VI)
+
+### 📁 Files changed: 4 files (+357 lines)
+
+---
+
 ## v1.3.0 — Activity History (Lịch Sử Hoạt Động)
 **Deploy:** 2026-03-07 | **Commit:** `52a30e8` | **Branch:** `main`
 
