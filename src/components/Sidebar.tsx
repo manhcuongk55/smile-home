@@ -37,7 +37,7 @@ export default function Sidebar() {
             items: [
                 { href: '/reports', label: t('financialReports'), icon: '📈' },
                 { href: '/activity', label: t('activityHistory'), icon: '📜' },
-                { href: '/post-generator', label: '🤖 Đăng Bài', icon: '🤖' },
+                { href: '/post-generator', label: '🚀 Tìm Khách MXH', icon: '🚀' },
             ]
         },
     ];
