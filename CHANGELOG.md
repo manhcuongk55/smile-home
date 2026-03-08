@@ -1,5 +1,23 @@
 # CHANGELOG — Smile Home / Xgate Property OS
 
+## v1.5.0 — Bot Đăng Bài + Landing Page Bán PM
+**Deploy:** 2026-03-08 | **Commit:** `c3f8fdb` | **Branch:** `main`
+
+### ✨ Tính năng mới
+- **🤖 Đăng Bài Tìm Khách** — `/post-generator`
+  - Template cho Facebook, Zalo, Messenger, SMS
+  - Tự động lấy phòng trống từ DB → fill thông tin
+  - Bulk mode: tạo bài cho tất cả phòng trống cùng lúc
+  - Nút Copy 1 click → paste vào group
+- **🏢 Landing Page Bán PM** — `/sell`
+  - Giới thiệu 8 tính năng nổi bật
+  - Pricing 3 gói: Starter (500K), Pro (1.2TR), Enterprise
+  - Social proof + Contact form
+
+### 📁 Files changed: 4 files (+531 lines)
+
+---
+
 ## v1.4.0 — Nhắc Tiền Phòng (Rent Reminders)
 **Deploy:** 2026-03-08 | **Commit:** `d3ad7a2` | **Branch:** `main`
 
