@@ -14,24 +14,9 @@ interface VacantRoom {
 }
 
 const ROOM_TYPE_VI: Record<string, string> = {
-    STUDIO: 'Phòng Studio', ONE_BED: '1 Phòng ngủ', TWO_BED: '2 Phòng ngủ',
-    THREE_BED: '3 Phòng ngủ', PENTHOUSE: 'Penthouse', COMMERCIAL: 'Mặt bằng KD',
+    STUDIO: 'Phòng Studio', ONE_BED: '1PN', TWO_BED: '2PN',
+    THREE_BED: '3PN', PENTHOUSE: 'Penthouse', COMMERCIAL: 'Mặt bằng',
 };
-
-const PLATFORMS = [
-    { key: 'facebook', name: 'Facebook', icon: '📘', color: '#1877F2' },
-    { key: 'zalo', name: 'Zalo OA', icon: '💬', color: '#0068FF' },
-    { key: 'tiktok', name: 'TikTok', icon: '🎵', color: '#EE1D52' },
-    { key: 'groups', name: 'FB Groups', icon: '👥', color: '#42B72A' },
-];
-
-const GROUP_TARGETS = [
-    '🏘️ Tìm phòng trọ {district}',
-    '🏠 Cho thuê phòng {district}',
-    '📣 Nhà trọ & phòng cho thuê HN/SG',
-    '🎓 Sinh viên tìm phòng {district}',
-    '💼 Nhân viên VP tìm phòng {district}',
-];
 
 function money(n: number) {
     if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + ' triệu';
@@ -39,264 +24,224 @@ function money(n: number) {
     return n.toLocaleString('vi-VN') + 'đ';
 }
 
-function genFB(r: VacantRoom, contact: string, phone: string, extras: string) {
-    return `🏠 CHO THUÊ ${(ROOM_TYPE_VI[r.type] || r.type).toUpperCase()} — GIÁ CỰC TỐT! 🔥
-
-📍 ${r.address || r.propertyName}
-🏢 ${r.buildingName} — Phòng ${r.number}
-💰 ${money(r.price)}/tháng
-📐 ${r.area}m²
-
-${extras || `✅ An ninh 24/7
-✅ Wifi tốc độ cao miễn phí
-✅ Giờ giấc tự do
-✅ Gần trường học, siêu thị, bệnh viện`}
-
-📞 Liên hệ NGAY: ${contact} — ${phone}
-🔥 SỐ LƯỢNG CÓ HẠN — Ai nhanh thì được!
-
-#chothue #phongtro #nhatro #${(r.address || '').replace(/[^a-zA-ZÀ-ỹ0-9]/g, '').toLowerCase()} #timphong`;
+function buildPostText(r: VacantRoom, contact: string, phone: string, extras: string) {
+    return `🏠 CHO THUÊ ${(ROOM_TYPE_VI[r.type] || r.type).toUpperCase()} — GIÁ TỐT!\n\n📍 ${r.address || r.propertyName}\n🏢 ${r.buildingName} — P.${r.number}\n💰 ${money(r.price)}/tháng | 📐 ${r.area}m²\n\n${extras || '✅ An ninh 24/7 ✅ Wifi free ✅ Giờ tự do'}\n\n📞 LH: ${contact} — ${phone}\n🔥 Phòng đẹp — ai nhanh thì được!\n\n#chothue #phongtro #nhatro`;
 }
 
-function genZalo(r: VacantRoom, contact: string, phone: string, extras: string) {
-    return `🏠 Cho thuê ${ROOM_TYPE_VI[r.type] || r.type} giá tốt!
-
-📍 ${r.address || r.propertyName}
-🏢 ${r.buildingName} — P.${r.number}
-💰 ${money(r.price)}/th | 📐 ${r.area}m²
-
-${extras || '✅ An ninh, wifi free, giờ tự do, gần trường & chợ'}
-
-📞 ${contact}: ${phone}
-💬 Nhắn tin Zalo để xem phòng ngay!`;
+// One-click share openers
+function shareFacebook(text: string, url: string) {
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+    window.open(fbUrl, '_blank', 'width=600,height=500');
 }
 
-function genTikTok(r: VacantRoom, contact: string, phone: string) {
-    return `🏠 Phòng đẹp giá rẻ ${money(r.price)}/tháng!
-📍 ${r.address || r.propertyName}
-📐 ${r.area}m² | ${ROOM_TYPE_VI[r.type] || r.type}
-📞 LH: ${contact} ${phone}
-
-#phongchothue #nhatro #timphongtro #phongtrogiare #${(r.address || 'hanoi').replace(/[^a-zA-ZÀ-ỹ]/g, '').toLowerCase()}`;
+function shareZalo(text: string, url: string) {
+    const zaloUrl = `https://zalo.me/share?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text.substring(0, 200))}`;
+    window.open(zaloUrl, '_blank', 'width=600,height=500');
 }
 
-function genGroups(r: VacantRoom, contact: string, phone: string, extras: string) {
-    return `📢 PHÒNG TRỐNG — CẦN CHO THUÊ GẤP!
-
-🏠 ${ROOM_TYPE_VI[r.type] || r.type} — ${r.buildingName}, P.${r.number}
-📍 ${r.address || r.propertyName}
-💰 Giá: ${money(r.price)}/tháng (thương lượng)
-📐 DT: ${r.area}m²
-
-${extras || `👉 An ninh camera 24/7
-👉 Wifi miễn phí
-👉 Tự do giờ giấc
-👉 Đầy đủ nội thất cơ bản`}
-
-☎️ Liên hệ: ${contact} — ${phone}
-💬 Comment SĐT hoặc inbox để nhận thêm ảnh phòng!`;
+function shareMessenger(text: string, url: string) {
+    const messengerUrl = `fb-messenger://share?link=${encodeURIComponent(url)}&app_id=0`;
+    window.open(messengerUrl, '_blank');
+    // Fallback for desktop
+    setTimeout(() => {
+        window.open(`https://www.facebook.com/dialog/send?link=${encodeURIComponent(url)}&app_id=0&redirect_uri=${encodeURIComponent(url)}`, '_blank', 'width=600,height=500');
+    }, 1000);
 }
 
-function generateForPlatform(r: VacantRoom, platform: string, contact: string, phone: string, extras: string) {
-    switch (platform) {
-        case 'facebook': return genFB(r, contact, phone, extras);
-        case 'zalo': return genZalo(r, contact, phone, extras);
-        case 'tiktok': return genTikTok(r, contact, phone);
-        case 'groups': return genGroups(r, contact, phone, extras);
-        default: return genFB(r, contact, phone, extras);
-    }
+function shareSMS(text: string) {
+    window.open(`sms:?body=${encodeURIComponent(text)}`, '_blank');
 }
 
-export default function SaleCampaignPage() {
+function shareWhatsApp(text: string) {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'width=600,height=500');
+}
+
+function shareTwitter(text: string, url: string) {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text.substring(0, 240))}&url=${encodeURIComponent(url)}`, '_blank', 'width=600,height=500');
+}
+
+const SHARE_PLATFORMS = [
+    { key: 'facebook', name: 'Facebook', icon: '📘', color: '#1877F2', action: shareFacebook },
+    { key: 'zalo', name: 'Zalo', icon: '💬', color: '#0068FF', action: shareZalo },
+    { key: 'messenger', name: 'Messenger', icon: '💜', color: '#A855F7', action: shareMessenger },
+    { key: 'whatsapp', name: 'WhatsApp', icon: '🟢', color: '#25D366', action: shareWhatsApp },
+    { key: 'twitter', name: 'X/Twitter', icon: '🐦', color: '#1DA1F2', action: shareTwitter },
+];
+
+export default function AutoPostPage() {
     const [rooms, setRooms] = useState<VacantRoom[]>([]);
     const [contact, setContact] = useState('Anh Cường');
     const [phone, setPhone] = useState('');
     const [extras, setExtras] = useState('');
-    const [activePlatform, setActivePlatform] = useState('facebook');
     const [postedMap, setPostedMap] = useState<Record<string, string[]>>({});
-    const [copiedId, setCopiedId] = useState('');
+    const [autoPosting, setAutoPosting] = useState(false);
+    const [autoProgress, setAutoProgress] = useState(0);
     const [district, setDistrict] = useState('Hà Nội');
+
+    const BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
     const fetchRooms = useCallback(async () => {
         const res = await fetch('/api/vacant-rooms');
-        const data = await res.json();
-        setRooms(data || []);
+        setRooms(await res.json());
     }, []);
 
     useEffect(() => { fetchRooms(); }, [fetchRooms]);
 
-    async function copyPost(roomId: string, text: string) {
-        await navigator.clipboard.writeText(text);
-        setCopiedId(roomId);
-        setPostedMap((prev) => ({
-            ...prev,
-            [roomId]: [...(prev[roomId] || []), activePlatform],
-        }));
-        setTimeout(() => setCopiedId(''), 2000);
+    function getListingUrl(roomId: string) {
+        return `${BASE_URL}/listings#${roomId}`;
     }
 
-    async function copyAll() {
-        const allPosts = rooms.map((r) => generateForPlatform(r, activePlatform, contact, phone, extras)).join('\n\n' + '━'.repeat(40) + '\n\n');
-        await navigator.clipboard.writeText(allPosts);
-        setCopiedId('ALL');
-        rooms.forEach((r) => {
-            setPostedMap((prev) => ({
-                ...prev,
-                [r.id]: [...new Set([...(prev[r.id] || []), activePlatform])],
-            }));
-        });
-        setTimeout(() => setCopiedId(''), 3000);
+    function shareRoom(room: VacantRoom, platformKey: string) {
+        const text = buildPostText(room, contact, phone, extras);
+        const url = getListingUrl(room.id);
+        const platform = SHARE_PLATFORMS.find((p) => p.key === platformKey);
+
+        if (platformKey === 'sms') {
+            shareSMS(text);
+        } else if (platform) {
+            platform.action(text, url);
+        }
+
+        setPostedMap((prev) => ({
+            ...prev,
+            [room.id]: [...new Set([...(prev[room.id] || []), platformKey])],
+        }));
+    }
+
+    async function autoPostAll(platformKey: string) {
+        setAutoPosting(true);
+        setAutoProgress(0);
+        for (let i = 0; i < rooms.length; i++) {
+            shareRoom(rooms[i], platformKey);
+            setAutoProgress(i + 1);
+            // Delay between opens to avoid browser blocking
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+        setAutoPosting(false);
     }
 
     const totalPosted = Object.values(postedMap).filter((v) => v.length > 0).length;
-    const notPosted = rooms.length - totalPosted;
-    const platformInfo = PLATFORMS.find((p) => p.key === activePlatform) || PLATFORMS[0];
+
+    const GROUP_SUGGESTIONS = [
+        `🏘️ Tìm phòng trọ ${district}`,
+        `🏠 Cho thuê phòng ${district}`,
+        `📣 Nhà trọ & CCMN ${district}`,
+        `🎓 SV tìm phòng ${district}`,
+        `💼 Nhân viên VP tìm phòng ${district}`,
+    ];
 
     return (
         <>
             <div className="page-header">
                 <div>
-                    <h1>🚀 Chiến Dịch Tìm Khách Tự Động</h1>
-                    <p>Lấy dữ liệu phòng trống → tạo bài đăng → đăng lên MXH → thu lead cho sales</p>
+                    <h1>🚀 Tự Động Đăng Bài Tìm Khách</h1>
+                    <p>Bấm 1 nút → Mở thẳng Facebook/Zalo → Bài viết soạn sẵn → Chỉ cần bấm &quot;Đăng&quot;</p>
                 </div>
             </div>
 
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
-                <div className="stat-card">
-                    <div className="stat-label">🏠 Phòng Trống</div>
-                    <div className="stat-value" style={{ color: 'var(--accent-blue)' }}>{rooms.length}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">✅ Đã Đăng</div>
-                    <div className="stat-value" style={{ color: 'var(--accent-emerald)' }}>{totalPosted}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">⏳ Chưa Đăng</div>
-                    <div className="stat-value" style={{ color: 'var(--accent-amber)' }}>{notPosted}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">📱 Nền Tảng</div>
-                    <div className="stat-value">{platformInfo.icon} {platformInfo.name}</div>
-                </div>
-            </div>
-
-            {/* Workflow Steps */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
-                {['1️⃣ Chọn nền tảng', '2️⃣ Điền liên hệ', '3️⃣ Copy bài → Paste vào group', '4️⃣ Khách inbox/gọi → Sale chốt'].map((step, i) => (
-                    <div key={i} style={{ padding: '8px 16px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        {step}
-                    </div>
+            {/* Flow diagram */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {['🏠 Phòng trống', '→', '🤖 Auto soạn bài', '→', '📲 Mở MXH', '→', '✅ Bấm Đăng', '→', '📞 Khách gọi', '→', '🤝 Sale chốt'].map((step, i) => (
+                    <span key={i} style={{
+                        padding: step === '→' ? '0 4px' : '6px 14px',
+                        background: step === '→' ? 'transparent' : 'var(--bg-card)',
+                        border: step === '→' ? 'none' : '1px solid var(--border-subtle)',
+                        borderRadius: 99, fontSize: '0.75rem', fontWeight: 600,
+                        color: step === '→' ? 'var(--accent-blue)' : 'var(--text-secondary)',
+                    }}>{step}</span>
                 ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 20 }}>
-                {/* Left — Config */}
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+                <div className="stat-card"><div className="stat-label">🏠 Phòng trống</div><div className="stat-value" style={{ color: 'var(--accent-blue)' }}>{rooms.length}</div></div>
+                <div className="stat-card"><div className="stat-label">✅ Đã đăng</div><div className="stat-value" style={{ color: 'var(--accent-emerald)' }}>{totalPosted}</div></div>
+                <div className="stat-card"><div className="stat-label">⏳ Chưa đăng</div><div className="stat-value" style={{ color: 'var(--accent-amber)' }}>{rooms.length - totalPosted}</div></div>
+                <div className="stat-card"><div className="stat-label">📊 Tỷ lệ</div><div className="stat-value" style={{ color: totalPosted === rooms.length ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>{rooms.length > 0 ? Math.round((totalPosted / rooms.length) * 100) : 0}%</div></div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20 }}>
+                {/* Left: Settings */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    {/* Platform */}
                     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: 14 }}>
-                        <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, display: 'block', textTransform: 'uppercase' }}>📱 Nền tảng MXH</label>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                            {PLATFORMS.map((p) => (
-                                <button key={p.key} onClick={() => setActivePlatform(p.key)} style={{
-                                    padding: '10px 6px', background: activePlatform === p.key ? p.color : 'var(--bg-secondary)',
-                                    color: activePlatform === p.key ? 'white' : 'var(--text-primary)',
-                                    border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: '0.78rem',
-                                    fontWeight: activePlatform === p.key ? 700 : 400, transition: 'all 150ms ease',
-                                }}>
-                                    {p.icon} {p.name}
+                        <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, display: 'block', textTransform: 'uppercase' }}>📞 Thông tin sale</label>
+                        <input type="text" placeholder="Tên" value={contact} onChange={(e) => setContact(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', marginBottom: 6, fontSize: '0.82rem' }} />
+                        <input type="tel" placeholder="SĐT" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', marginBottom: 6, fontSize: '0.82rem' }} />
+                        <input type="text" placeholder="Khu vực" value={district} onChange={(e) => setDistrict(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontSize: '0.82rem' }} />
+                    </div>
+
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: 14 }}>
+                        <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, display: 'block', textTransform: 'uppercase' }}>✍️ Ưu điểm phòng</label>
+                        <textarea placeholder="✅ An ninh 24/7&#10;✅ Wifi free" value={extras} onChange={(e) => setExtras(e.target.value)} rows={3} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontSize: '0.82rem', resize: 'vertical' }} />
+                    </div>
+
+                    {/* Auto-post ALL buttons */}
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-md)', padding: 14 }}>
+                        <label style={{ fontSize: '0.7rem', color: 'var(--accent-amber)', fontWeight: 700, marginBottom: 10, display: 'block' }}>⚡ ĐĂNG TẤT CẢ — 1 NÚT</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {SHARE_PLATFORMS.filter((p) => ['facebook', 'zalo', 'whatsapp'].includes(p.key)).map((p) => (
+                                <button key={p.key} onClick={() => autoPostAll(p.key)} disabled={autoPosting || rooms.length === 0}
+                                    style={{ padding: '10px 12px', background: p.color, color: 'white', border: 'none', borderRadius: 8, cursor: autoPosting ? 'wait' : 'pointer', fontWeight: 700, fontSize: '0.82rem', opacity: autoPosting ? 0.6 : 1 }}>
+                                    {autoPosting ? `⏳ Đang đăng ${autoProgress}/${rooms.length}...` : `${p.icon} Đăng TẤT CẢ lên ${p.name}`}
                                 </button>
                             ))}
                         </div>
+                        {autoPosting && (
+                            <div style={{ marginTop: 8, height: 4, background: 'var(--bg-secondary)', borderRadius: 99, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${(autoProgress / rooms.length) * 100}%`, background: 'var(--accent-emerald)', transition: 'width 300ms ease' }} />
+                            </div>
+                        )}
                     </div>
 
-                    {/* Contact */}
+                    {/* Group suggestions */}
                     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: 14 }}>
-                        <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, display: 'block', textTransform: 'uppercase' }}>📞 Thông tin sale</label>
-                        <input type="text" placeholder="Tên sale" value={contact} onChange={(e) => setContact(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', marginBottom: 6, fontSize: '0.82rem' }} />
-                        <input type="tel" placeholder="SĐT" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', marginBottom: 6, fontSize: '0.82rem' }} />
-                        <input type="text" placeholder="Quận / Khu vực" value={district} onChange={(e) => setDistrict(e.target.value)} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontSize: '0.82rem' }} />
+                        <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, display: 'block' }}>💡 GROUP FB NÊN ĐĂNG</label>
+                        {GROUP_SUGGESTIONS.map((g, i) => (
+                            <a key={i} href={`https://www.facebook.com/search/groups/?q=${encodeURIComponent(g)}`} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '5px 0', fontSize: '0.73rem', color: 'var(--accent-blue)', textDecoration: 'underline', borderBottom: '1px solid var(--border-subtle)' }}>
+                                {g}
+                            </a>
+                        ))}
                     </div>
-
-                    {/* Extras */}
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: 14 }}>
-                        <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8, display: 'block', textTransform: 'uppercase' }}>✍️ Ưu điểm chung</label>
-                        <textarea placeholder="✅ An ninh 24/7&#10;✅ Wifi miễn phí&#10;✅ Gần Metro / siêu thị" value={extras} onChange={(e) => setExtras(e.target.value)} rows={4} style={{ width: '100%', padding: '8px 10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 6, color: 'var(--text-primary)', fontSize: '0.82rem', resize: 'vertical' }} />
-                    </div>
-
-                    {/* Suggested groups */}
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-md)', padding: 14 }}>
-                        <label style={{ fontSize: '0.7rem', color: 'var(--accent-amber)', fontWeight: 700, marginBottom: 8, display: 'block' }}>💡 GROUP NÊN ĐĂNG</label>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            {GROUP_TARGETS.map((g, i) => (
-                                <div key={i} style={{ fontSize: '0.75rem', padding: '4px 0', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
-                                    {g.replace('{district}', district)}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Copy All button */}
-                    <button onClick={copyAll} style={{
-                        padding: '12px 0', background: copiedId === 'ALL' ? 'var(--accent-emerald)' : platformInfo.color,
-                        color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: '0.9rem',
-                        cursor: 'pointer', transition: 'all 200ms ease',
-                    }}>
-                        {copiedId === 'ALL' ? '✅ Đã copy tất cả!' : `📋 Copy ALL (${rooms.length} bài)`}
-                    </button>
                 </div>
 
-                {/* Right — Room Posts */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Right: Room cards */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {rooms.length === 0 ? (
-                        <div className="empty-state">
-                            <div className="empty-icon">🏠</div>
-                            <h3>Không có phòng trống</h3>
-                            <p>Tất cả phòng đã có khách thuê!</p>
-                        </div>
+                        <div className="empty-state"><div className="empty-icon">🏠</div><h3>Không có phòng trống</h3><p>Tất cả phòng đã có khách!</p></div>
                     ) : rooms.map((room) => {
                         const posted = postedMap[room.id] || [];
-                        const postText = generateForPlatform(room, activePlatform, contact, phone, extras);
-                        const isCopied = copiedId === room.id;
-
+                        const postText = buildPostText(room, contact, phone, extras);
                         return (
-                            <div key={room.id} style={{
-                                background: 'var(--bg-card)',
-                                border: `1px solid ${posted.includes(activePlatform) ? 'var(--accent-emerald)' : 'var(--border-subtle)'}`,
-                                borderRadius: 'var(--radius-md)',
-                                overflow: 'hidden',
-                                transition: 'all 200ms ease',
-                            }}>
-                                {/* Room header */}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div key={room.id} style={{ background: 'var(--bg-card)', border: `1px solid ${posted.length > 0 ? 'var(--accent-emerald)' : 'var(--border-subtle)'}`, borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <span style={{ fontSize: '1rem' }}>🏠</span>
                                         <div>
-                                            <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>P.{room.number} — {room.buildingName}</div>
-                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{ROOM_TYPE_VI[room.type] || room.type} | {money(room.price)}/th | {room.area}m²</div>
+                                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>P.{room.number} — {room.buildingName}</div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{ROOM_TYPE_VI[room.type]} | {money(room.price)}/th | {room.area}m²</div>
                                         </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                         {posted.length > 0 && (
-                                            <div style={{ display: 'flex', gap: 2 }}>
-                                                {posted.map((p) => {
-                                                    const pl = PLATFORMS.find((x) => x.key === p);
-                                                    return <span key={p} title={`Đã đăng ${pl?.name}`} style={{ fontSize: '0.8rem' }}>{pl?.icon}</span>;
-                                                })}
-                                            </div>
+                                            <span style={{ fontSize: '0.65rem', background: 'var(--accent-emerald)', color: 'white', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>✅ Đã đăng {posted.length} MXH</span>
                                         )}
-                                        <button onClick={() => copyPost(room.id, postText)} style={{
-                                            padding: '6px 14px',
-                                            background: isCopied ? 'var(--accent-emerald)' : platformInfo.color,
-                                            color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer',
-                                            fontSize: '0.72rem', fontWeight: 700, transition: 'all 150ms ease',
-                                        }}>
-                                            {isCopied ? '✅ Copied!' : `📋 Copy ${platformInfo.name}`}
+                                    </div>
+                                    {/* Share buttons */}
+                                    <div style={{ display: 'flex', gap: 4 }}>
+                                        {SHARE_PLATFORMS.map((p) => (
+                                            <button key={p.key} onClick={() => shareRoom(room, p.key)} title={`Đăng lên ${p.name}`}
+                                                style={{
+                                                    width: 34, height: 34, borderRadius: 8, border: 'none', cursor: 'pointer',
+                                                    background: posted.includes(p.key) ? 'var(--accent-emerald)' : p.color,
+                                                    color: 'white', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 150ms ease',
+                                                }}>
+                                                {posted.includes(p.key) ? '✅' : p.icon}
+                                            </button>
+                                        ))}
+                                        <button onClick={() => shareSMS(postText)} title="Gửi SMS" style={{ width: 34, height: 34, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#10B981', color: 'white', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            📱
                                         </button>
                                     </div>
                                 </div>
-                                {/* Post preview */}
-                                <div style={{ padding: '12px 16px', whiteSpace: 'pre-wrap', fontSize: '0.78rem', lineHeight: 1.65, color: 'var(--text-secondary)', maxHeight: 180, overflowY: 'auto' }}>
+                                <div style={{ padding: '10px 14px', whiteSpace: 'pre-wrap', fontSize: '0.75rem', lineHeight: 1.6, color: 'var(--text-secondary)', maxHeight: 120, overflowY: 'auto' }}>
                                     {postText}
                                 </div>
                             </div>
@@ -305,33 +250,21 @@ export default function SaleCampaignPage() {
                 </div>
             </div>
 
-            {/* Posting tips */}
-            <div style={{ marginTop: 24, background: 'var(--bg-card)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-md)', padding: 20 }}>
-                <h4 style={{ fontSize: '0.85rem', color: 'var(--accent-amber)', marginBottom: 12 }}>🎯 Chiến Lược Đăng Bài Hiệu Quả Cho Sales</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                    <div>
-                        <strong>⏰ Thời gian vàng:</strong>
-                        <ul style={{ margin: '4px 0', paddingLeft: 16, lineHeight: 1.7 }}>
-                            <li>Sáng: <strong>7h-9h</strong> (dân văn phòng lướt)</li>
-                            <li>Trưa: <strong>11h30-13h</strong> (giờ nghỉ)</li>
-                            <li>Tối: <strong>20h-22h</strong> (peak online)</li>
-                        </ul>
+            {/* Posting strategy */}
+            <div style={{ marginTop: 24, background: 'var(--bg-card)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-md)', padding: 18 }}>
+                <h4 style={{ fontSize: '0.82rem', color: 'var(--accent-amber)', marginBottom: 10 }}>⏰ Lịch Đăng Bài Tự Động Hàng Ngày</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
+                        <strong style={{ color: 'var(--accent-amber)' }}>🌅 Sáng 7h-9h</strong>
+                        <p style={{ marginTop: 4, lineHeight: 1.5 }}>Facebook Groups + Zalo OA<br />Dân văn phòng lướt MXH trước giờ làm</p>
                     </div>
-                    <div>
-                        <strong>📸 Content mạnh:</strong>
-                        <ul style={{ margin: '4px 0', paddingLeft: 16, lineHeight: 1.7 }}>
-                            <li>Kèm <strong>5+ ảnh thật</strong> phòng</li>
-                            <li>Video 15s Reels/TikTok tour phòng</li>
-                            <li>Caption có <strong>giá + địa chỉ</strong> ngay dòng đầu</li>
-                        </ul>
+                    <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
+                        <strong style={{ color: 'var(--accent-blue)' }}>🌞 Trưa 11h30-13h</strong>
+                        <p style={{ marginTop: 4, lineHeight: 1.5 }}>Facebook Marketplace<br />Giờ nghỉ trưa = peak engagement</p>
                     </div>
-                    <div>
-                        <strong>🎯 Đăng ở đâu:</strong>
-                        <ul style={{ margin: '4px 0', paddingLeft: 16, lineHeight: 1.7 }}>
-                            <li>5-10 group FB quận/huyện gần nhà</li>
-                            <li>Marketplace Facebook</li>
-                            <li>TikTok + hashtag địa phương</li>
-                        </ul>
+                    <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
+                        <strong style={{ color: 'var(--accent-purple)' }}>🌙 Tối 20h-22h</strong>
+                        <p style={{ marginTop: 4, lineHeight: 1.5 }}>TikTok + WhatsApp + Messenger<br />Peak online = nhiều người xem nhất</p>
                     </div>
                 </div>
             </div>

@@ -9,14 +9,13 @@ export async function GET() {
                 include: { property: true },
             },
         },
-        orderBy: { price: 'asc' },
+        orderBy: [{ building: { name: 'asc' } }, { price: 'asc' }],
     });
 
-    const result = rooms.map((room) => ({
+    const listings = rooms.map((room) => ({
         id: room.id,
         number: room.number,
         type: room.type,
-        status: room.status,
         price: room.price,
         area: room.area,
         buildingName: room.building.name,
@@ -24,5 +23,5 @@ export async function GET() {
         propertyName: room.building.property?.name || '',
     }));
 
-    return NextResponse.json(result);
+    return NextResponse.json(listings);
 }
