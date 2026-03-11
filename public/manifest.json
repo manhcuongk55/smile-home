@@ -1,0 +1,65 @@
+{
+    "name": "Smile Home - Quản lý nhà trọ thông minh",
+    "short_name": "Smile Home",
+    "description": "Hệ thống quản lý nhà trọ & phòng cho thuê thông minh với AI Assistant",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0c1929",
+    "theme_color": "#38bdf8",
+    "orientation": "any",
+    "categories": [
+        "business",
+        "productivity"
+    ],
+    "lang": "vi",
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "Phòng trọ",
+            "short_name": "Phòng",
+            "url": "/rooms",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "AI Assistant",
+            "short_name": "AI",
+            "url": "/ai-assistant",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Desktop OS",
+            "short_name": "Desktop",
+            "url": "/desktop",
+            "icons": [
+                {
+                    "src": "/icons/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}
