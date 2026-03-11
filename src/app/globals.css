@@ -1,47 +1,47 @@
 /* ============================================================
    SMILE HOME — Design System
-   Premium dark-mode property management interface
+   🌊 Calm ocean & beach inspired theme
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* ── Core Colors ── */
-  --bg-primary: #0a0e1a;
-  --bg-secondary: #111827;
-  --bg-card: #1a2035;
-  --bg-card-hover: #1e2642;
-  --bg-elevated: #222b45;
-  --bg-glass: rgba(26, 32, 53, 0.75);
+  /* ── 🏖️ Beach Core Colors ── */
+  --bg-primary: #0c1929;
+  --bg-secondary: #0f2133;
+  --bg-card: #132a3e;
+  --bg-card-hover: #173450;
+  --bg-elevated: #1a3a54;
+  --bg-glass: rgba(19, 42, 62, 0.75);
 
-  /* ── Accent Colors ── */
-  --accent-blue: #3b82f6;
-  --accent-blue-glow: rgba(59, 130, 246, 0.3);
-  --accent-teal: #14b8a6;
-  --accent-teal-glow: rgba(20, 184, 166, 0.2);
-  --accent-amber: #f59e0b;
-  --accent-amber-glow: rgba(245, 158, 11, 0.2);
-  --accent-purple: #8b5cf6;
-  --accent-purple-glow: rgba(139, 92, 246, 0.2);
-  --accent-rose: #f43f5e;
-  --accent-rose-glow: rgba(244, 63, 94, 0.2);
-  --accent-emerald: #10b981;
-  --accent-emerald-glow: rgba(16, 185, 129, 0.2);
+  /* ── 🌊 Ocean Accent Colors ── */
+  --accent-blue: #38bdf8;
+  --accent-blue-glow: rgba(56, 189, 248, 0.2);
+  --accent-teal: #2dd4bf;
+  --accent-teal-glow: rgba(45, 212, 191, 0.15);
+  --accent-amber: #fbbf24;
+  --accent-amber-glow: rgba(251, 191, 36, 0.15);
+  --accent-purple: #a78bfa;
+  --accent-purple-glow: rgba(167, 139, 250, 0.15);
+  --accent-rose: #fb7185;
+  --accent-rose-glow: rgba(251, 113, 133, 0.15);
+  --accent-emerald: #34d399;
+  --accent-emerald-glow: rgba(52, 211, 153, 0.15);
 
-  /* ── Text ── */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-accent: #60a5fa;
+  /* ── ☀️ Sandy Text ── */
+  --text-primary: #e8f0f8;
+  --text-secondary: #8fb8d4;
+  --text-muted: #5a8ba8;
+  --text-accent: #7dd3fc;
 
-  /* ── Borders ── */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-accent: rgba(59, 130, 246, 0.3);
+  /* ── 🐚 Shell Borders ── */
+  --border-subtle: rgba(56, 189, 248, 0.08);
+  --border-accent: rgba(56, 189, 248, 0.25);
 
-  /* ── Shadows ── */
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
-  --shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.4);
-  --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.15);
+  /* ── 🌅 Sunset Shadows ── */
+  --shadow-card: 0 4px 24px rgba(0, 20, 40, 0.35);
+  --shadow-elevated: 0 8px 40px rgba(0, 20, 40, 0.45);
+  --shadow-glow-blue: 0 0 30px rgba(56, 189, 248, 0.12);
 
   /* ── Spacing ── */
   --sidebar-width: 260px;
@@ -109,7 +109,7 @@ a:hover {
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.025em;
-  background: linear-gradient(135deg, var(--text-primary), var(--accent-blue));
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-teal));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -148,7 +148,7 @@ a:hover {
 }
 
 .sidebar-logo h2 span {
-  background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+  background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1082,7 +1082,10 @@ a:hover {
 /* Global Search */
 .search-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(8px);
   z-index: 1000;
@@ -1090,14 +1093,16 @@ a:hover {
   justify-content: center;
   padding-top: 15vh;
 }
+
 .search-modal {
   width: 600px;
   background: var(--card-bg);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
+
 .search-input-wrapper {
   display: flex;
   align-items: center;
@@ -1105,13 +1110,16 @@ a:hover {
   border-bottom: 1px solid var(--border-subtle);
   gap: 12px;
 }
+
 .search-input-wrapper input {
   background: transparent;
   border: none;
   color: var(--text-primary);
   font-size: 1.1rem;
-  width: 100%; outline: none;
+  width: 100%;
+  outline: none;
 }
+
 .search-shortcut {
   font-size: 0.7rem;
   background: var(--bg-secondary);
@@ -1119,7 +1127,12 @@ a:hover {
   border-radius: 4px;
   color: var(--text-muted);
 }
-.search-results { max-height: 400px; overflow-y: auto; }
+
+.search-results {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .search-result-item {
   padding: 12px 20px;
   display: flex;
@@ -1128,12 +1141,26 @@ a:hover {
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .search-result-item:hover {
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
 }
-.result-name { font-weight: 600; font-size: 0.95rem; }
-.result-type { font-size: 0.75rem; color: var(--text-muted); }
-.search-empty { padding: 40px; text-align: center; color: var(--text-muted); }
+
+.result-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.result-type {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.search-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}
 
 /* ── Commission Dashboard ── */
 .commission-tabs {
@@ -1237,11 +1264,25 @@ a:hover {
   z-index: 1;
 }
 
-.activity-icon-dot.emerald { background: var(--accent-emerald-glow); }
-.activity-icon-dot.blue { background: var(--accent-blue-glow); }
-.activity-icon-dot.rose { background: var(--accent-rose-glow); }
-.activity-icon-dot.amber { background: var(--accent-amber-glow); }
-.activity-icon-dot.purple { background: var(--accent-purple-glow); }
+.activity-icon-dot.emerald {
+  background: var(--accent-emerald-glow);
+}
+
+.activity-icon-dot.blue {
+  background: var(--accent-blue-glow);
+}
+
+.activity-icon-dot.rose {
+  background: var(--accent-rose-glow);
+}
+
+.activity-icon-dot.amber {
+  background: var(--accent-amber-glow);
+}
+
+.activity-icon-dot.purple {
+  background: var(--accent-purple-glow);
+}
 
 .activity-line {
   width: 2px;
@@ -1290,16 +1331,34 @@ a:hover {
 
 /* Print Styles */
 @media print {
-  .sidebar, .page-header button, .view-all, .btn, .search-overlay, .nav-section-label {
+
+  .sidebar,
+  .page-header button,
+  .view-all,
+  .btn,
+  .search-overlay,
+  .nav-section-label {
     display: none !important;
   }
-  body { background: white !important; color: black !important; }
-  .card { 
-    border: 1px solid #eee !important; 
-    box-shadow: none !important; 
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .card {
+    border: 1px solid #eee !important;
+    box-shadow: none !important;
     background: white !important;
     margin: 0 !important;
   }
-  .detail-page { padding: 0 !important; }
-  main { padding: 0 !important; margin: 0 !important; }
+
+  .detail-page {
+    padding: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 }
