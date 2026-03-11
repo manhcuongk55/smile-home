@@ -18,18 +18,28 @@ interface Lead {
     interactions?: { id: string; subject: string; createdAt: string }[];
 }
 
+interface VacantRoom {
+    id: string;
+    number: string;
+    type: string;
+    price: number;
+    building: { name: string; property: { name: string } };
+}
+
 const STAGES = [
-    { key: 'NEW', label: 'New', color: 'blue', icon: '🆕' },
-    { key: 'CONTACTED', label: 'Contacted', color: 'teal', icon: '📞' },
-    { key: 'VIEWING_SCHEDULED', label: 'Viewing', color: 'amber', icon: '👁️' },
-    { key: 'NEGOTIATING', label: 'Negotiating', color: 'purple', icon: '🤝' },
-    { key: 'CONVERTED', label: 'Converted', color: 'emerald', icon: '✅' },
-    { key: 'LOST', label: 'Lost', color: 'rose', icon: '❌' },
+    { key: 'NEW', label: 'Mới', color: 'blue', icon: '🆕' },
+    { key: 'CONTACTED', label: 'Đã liên hệ', color: 'teal', icon: '📞' },
+    { key: 'VIEWING_SCHEDULED', label: 'Xem phòng', color: 'amber', icon: '👁️' },
+    { key: 'NEGOTIATING', label: 'Thương lượng', color: 'purple', icon: '🤝' },
+    { key: 'CONVERTED', label: 'Chốt HĐ', color: 'emerald', icon: '✅' },
+    { key: 'LOST', label: 'Mất', color: 'rose', icon: '❌' },
 ];
 
 export default function LeadsPage() {
     const [leads, setLeads] = useState<Lead[]>([]);
+    const [vacantRooms, setVacantRooms] = useState<VacantRoom[]>([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [assigningLead, setAssigningLead] = useState<string | null>(null);
     const [newLead, setNewLead] = useState({
         name: '',
         email: '',
@@ -38,18 +48,41 @@ export default function LeadsPage() {
         notes: '',
         source: '',
         value: '0',
+        interestedRoom: '',
     });
     const [toastMsg, setToastMsg] = useState('');
     const { t } = useLanguage();
 
     useEffect(() => {
         fetchLeads();
+        fetchVacantRooms();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function fetchLeads() {
         const res = await fetch('/api/persons?role=LEAD');
         const data = await res.json();
         setLeads(Array.isArray(data) ? data : []);
+    }
+
+    async function fetchVacantRooms() {
+        try {
+            const res = await fetch('/api/vacant-rooms');
+            if (res.ok) setVacantRooms(await res.json());
+        } catch { /* ignore */ }
+    }
+
+    async function assignRoom(leadId: string, roomInfo: string) {
+        try {
+            await fetch(`/api/persons/${leadId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: roomInfo }),
+            });
+            setToastMsg('✅ Đã gán phòng cho khách!');
+            setAssigningLead(null);
+            fetchLeads();
+            setTimeout(() => setToastMsg(''), 3000);
+        } catch { }
     }
 
     async function handleCreate(e: React.FormEvent) {
@@ -61,7 +94,7 @@ export default function LeadsPage() {
                 body: JSON.stringify({ ...newLead, role: 'LEAD' }),
             });
             setShowCreateModal(false);
-            setNewLead({ name: '', email: '', phone: '', leadStatus: 'NEW', notes: '', source: '', value: '0' });
+            setNewLead({ name: '', email: '', phone: '', leadStatus: 'NEW', notes: '', source: '', value: '0', interestedRoom: '' });
             setToastMsg(t('leadCreated'));
             fetchLeads();
             setTimeout(() => setToastMsg(''), 3000);
@@ -133,14 +166,29 @@ export default function LeadsPage() {
                                             {lead.phone && <span>📱 {lead.phone}</span>}
                                         </div>
                                         {lead.notes && (
-                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 6, fontStyle: 'italic' }}>
-                                                {lead.notes.length > 60 ? lead.notes.slice(0, 60) + '...' : lead.notes}
+                                            <div style={{ fontSize: '0.7rem', marginTop: 6, padding: '4px 8px', borderRadius: 6, background: lead.notes.includes('🏠') ? 'rgba(56,189,248,0.1)' : 'transparent', color: lead.notes.includes('🏠') ? '#38bdf8' : 'var(--text-muted)', fontStyle: lead.notes.includes('🏠') ? 'normal' : 'italic', fontWeight: lead.notes.includes('🏠') ? 600 : 400 }}>
+                                                {lead.notes.length > 80 ? lead.notes.slice(0, 80) + '...' : lead.notes}
                                             </div>
                                         )}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: '0.75rem', fontWeight: 'bold' }}>
-                                            <span style={{ color: 'var(--accent-emerald)' }}>${(lead.value || 0).toLocaleString()}</span>
-                                            {lead.source && <span style={{ color: 'var(--text-muted)', opacity: 0.7 }}>📍 {lead.source}</span>}
-                                        </div>
+                                        {/* Assign Room Button */}
+                                        {assigningLead === lead.id ? (
+                                            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 600 }}>Chọn phòng:</div>
+                                                {vacantRooms.length > 0 ? vacantRooms.slice(0, 5).map(room => (
+                                                    <button key={room.id} onClick={() => assignRoom(lead.id, `🏠 ${room.building.property.name} — ${room.building.name} — P.${room.number} (${room.type}) — ${new Intl.NumberFormat('vi-VN').format(room.price)}đ`)}
+                                                        style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: '0.68rem', cursor: 'pointer', textAlign: 'left' }}
+                                                    >
+                                                        🏠 {room.building.name} — P.{room.number} ({new Intl.NumberFormat('vi-VN').format(room.price)}đ)
+                                                    </button>
+                                                )) : <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Không có phòng trống</div>}
+                                                <button onClick={() => setAssigningLead(null)} style={{ padding: '2px 8px', borderRadius: 4, border: 'none', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.65rem', cursor: 'pointer' }}>✕ Đóng</button>
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: '0.75rem', fontWeight: 'bold', alignItems: 'center' }}>
+                                                <span style={{ color: 'var(--accent-emerald)' }}>{(lead.value || 0).toLocaleString()}đ</span>
+                                                <button onClick={() => setAssigningLead(lead.id)} style={{ padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(56,189,248,0.2)', background: 'transparent', color: '#38bdf8', fontSize: '0.65rem', cursor: 'pointer', fontWeight: 600 }}>🏠 Gán phòng</button>
+                                            </div>
+                                        )}
                                         <div className="lead-meta">
                                             <span>{formatDate(lead.createdAt)}</span>
                                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -252,6 +300,21 @@ export default function LeadsPage() {
                                             onChange={(e) => setNewLead({ ...newLead, value: e.target.value })}
                                         />
                                     </div>
+                                </div>
+                                <div className="form-group">
+                                    <label>🏠 Phòng quan tâm</label>
+                                    <select
+                                        className="form-select"
+                                        value={newLead.interestedRoom}
+                                        onChange={(e) => setNewLead({ ...newLead, interestedRoom: e.target.value, notes: e.target.value ? `🏠 ${e.target.value}` : newLead.notes })}
+                                    >
+                                        <option value="">-- Chọn phòng (tùy chọn) --</option>
+                                        {vacantRooms.map(r => (
+                                            <option key={r.id} value={`${r.building.property.name} — ${r.building.name} — P.${r.number} (${r.type})`}>
+                                                {r.building.property.name} — {r.building.name} — P.{r.number} ({new Intl.NumberFormat('vi-VN').format(r.price)}đ)
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="form-group">
                                     <label>{t('notesLabel')}</label>
