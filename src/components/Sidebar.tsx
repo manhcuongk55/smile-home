@@ -46,6 +46,7 @@ export default function Sidebar() {
                 { href: '/activity', label: t('activityHistory'), icon: '📜' },
                 { href: '/social-hub', label: '📲 Social Automation', icon: '📲', badge: 'New' },
                 { href: '/post-generator', label: '🚀 Tìm Khách MXH', icon: '🚀' },
+                { href: '/desktop', label: '🌐 Desktop OS', icon: '🌐', badge: 'OS' },
             ]
         },
     ];
