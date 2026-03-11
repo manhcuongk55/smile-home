@@ -480,33 +480,44 @@ export default function SocialHubPage() {
                 borderRadius: 'var(--radius-lg)', padding: 18,
             }}>
                 <h4 style={{ fontSize: '0.82rem', color: 'var(--accent-amber)', marginBottom: 12 }}>
-                    🔧 Hướng dẫn kết nối Backend Services
+                    💡 Hệ thống tự động đăng bài — Giải thích đơn giản
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, fontSize: '0.75rem' }}>
                     <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 8 }}>
-                        <strong style={{ color: '#10b981' }}>🌐 mini-browser</strong>
-                        <pre style={{ marginTop: 6, fontSize: '0.68rem', color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>
-                            {`npm i -g @runablehq/mini-browser
-mb-start-chrome
-mb go "https://facebook.com"`}
-                        </pre>
+                        <strong style={{ color: '#34d399' }}>🌐 Trình duyệt tự động</strong>
+                        <p style={{ marginTop: 8, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                            Giống như có <strong>nhân viên ảo</strong> ngồi mở Facebook, Zalo giúp bạn —
+                            tự gõ bài, chọn nhóm, bấm đăng. Bạn chỉ cần <strong>duyệt nội dung</strong> trước khi đăng.
+                        </p>
+                        <div style={{ marginTop: 8, padding: '6px 10px', background: 'rgba(52,211,153,0.1)', borderRadius: 6, color: '#34d399', fontSize: '0.7rem' }}>
+                            ✅ Không cần biết kỹ thuật
+                        </div>
                     </div>
                     <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 8 }}>
-                        <strong style={{ color: '#3b82f6' }}>🤖 social-media-agent</strong>
-                        <pre style={{ marginTop: 6, fontSize: '0.68rem', color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>
-                            {`git clone social-media-agent
-yarn install
-yarn langgraph:in_mem:up`}
-                        </pre>
+                        <strong style={{ color: '#38bdf8' }}>🤖 AI viết bài tự động</strong>
+                        <p style={{ marginTop: 8, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                            AI sẽ <strong>tự soạn bài đăng</strong> từ thông tin phòng trống — có giá, diện tích,
+                            tiện ích. Mỗi bài viết <strong>qua duyệt</strong> trước khi đăng (bạn luôn kiểm soát).
+                        </p>
+                        <div style={{ marginTop: 8, padding: '6px 10px', background: 'rgba(56,189,248,0.1)', borderRadius: 6, color: '#38bdf8', fontSize: '0.7rem' }}>
+                            ✍️ AI soạn — Bạn duyệt — Máy đăng
+                        </div>
                     </div>
                     <div style={{ background: 'var(--bg-secondary)', padding: 14, borderRadius: 8 }}>
-                        <strong style={{ color: '#8b5cf6' }}>🦞 OpenClaw Gateway</strong>
-                        <pre style={{ marginTop: 6, fontSize: '0.68rem', color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>
-                            {`npm i -g openclaw@latest
-openclaw onboard
-openclaw gateway --port 18789`}
-                        </pre>
+                        <strong style={{ color: '#a78bfa' }}>🦞 Bộ não AI trung tâm</strong>
+                        <p style={{ marginTop: 8, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                            Đây là <strong>bộ não điều phối</strong> — kết nối trình duyệt tự động với AI viết bài.
+                            Giống như <strong>quản lý marketing ảo</strong>, chạy 24/7, biết lúc nào đăng bài hiệu quả nhất.
+                        </p>
+                        <div style={{ marginTop: 8, padding: '6px 10px', background: 'rgba(167,139,250,0.1)', borderRadius: 6, color: '#a78bfa', fontSize: '0.7rem' }}>
+                            🧠 Tự lên lịch — Đăng đúng giờ vàng
+                        </div>
                     </div>
+                </div>
+                <div style={{ marginTop: 14, padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: 8, fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                    <strong style={{ color: 'var(--accent-amber)' }}>📋 Tóm tắt:</strong> Hệ thống sẽ tự lấy thông tin phòng trống →
+                    AI viết bài quảng cáo → Bạn bấm duyệt → Máy tự mở Facebook/Zalo/TikTok đăng giúp →
+                    Khách gọi đến → Sale chốt hợp đồng. <strong>Bạn chỉ cần bấm 1 nút!</strong>
                 </div>
             </div>
         </>
