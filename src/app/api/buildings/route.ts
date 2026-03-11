@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
@@ -10,4 +10,16 @@ export async function GET() {
         orderBy: { name: 'asc' },
     });
     return NextResponse.json(buildings);
+}
+
+export async function POST(request: NextRequest) {
+    const body = await request.json();
+    const building = await prisma.building.create({
+        data: {
+            propertyId: body.propertyId,
+            name: body.name,
+            floors: body.floors || 1,
+        },
+    });
+    return NextResponse.json(building, { status: 201 });
 }
