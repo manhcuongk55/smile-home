@@ -53,8 +53,8 @@ export default function Sidebar() {
     return (
         <aside className="sidebar">
             <div className="sidebar-logo">
-                <h2><span>Xgate</span></h2>
-                <div className="subtitle">Property Operation System</div>
+                <h2>🏠 <span>Smile Home</span></h2>
+                <div className="subtitle">Quản lý nhà trọ thông minh</div>
             </div>
             <nav className="sidebar-nav">
                 {navItems.map((section) => (
