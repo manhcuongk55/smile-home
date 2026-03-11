@@ -1,32 +1,88 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
+// Generate or get session user ID
+function getUserId(): string {
+    if (typeof window === 'undefined') return 'unknown';
+    let uid = localStorage.getItem('smilehome_uid');
+    if (!uid) {
+        uid = 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+        localStorage.setItem('smilehome_uid', uid);
+    }
+    return uid;
+}
+
+// Track page visits
+function getPageFlow(): string[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        return JSON.parse(sessionStorage.getItem('smilehome_pageflow') || '[]');
+    } catch { return []; }
+}
+function addPageToFlow(path: string) {
+    if (typeof window === 'undefined') return;
+    const flow = getPageFlow();
+    const last = flow[flow.length - 1];
+    if (last !== path) {
+        flow.push(path);
+        // Keep last 20 pages
+        if (flow.length > 20) flow.shift();
+        sessionStorage.setItem('smilehome_pageflow', JSON.stringify(flow));
+    }
+}
 
 export default function FeedbackButton() {
     const [isOpen, setIsOpen] = useState(false);
     const [feedback, setFeedback] = useState('');
+    const [userName, setUserName] = useState('');
     const [category, setCategory] = useState('bug');
     const [sent, setSent] = useState(false);
+    const pathname = usePathname();
+
+    // Track page visits
+    useEffect(() => {
+        addPageToFlow(pathname);
+    }, [pathname]);
 
     function handleSend() {
         if (!feedback.trim()) return;
-        // Save feedback via API or log
+        const userId = getUserId();
+        const pageFlow = getPageFlow();
+        const currentPage = pathname;
+        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+        const device = /Mobile|Android|iPhone/i.test(userAgent) ? '📱 Mobile' : '💻 Desktop';
+        const browser = userAgent.includes('Chrome') ? 'Chrome' : userAgent.includes('Firefox') ? 'Firefox' : userAgent.includes('Safari') ? 'Safari' : 'Other';
+
+        const fullContent = [
+            feedback,
+            '',
+            '---',
+            `👤 User: ${userName || 'Ẩn danh'} (${userId})`,
+            `📍 Trang hiện tại: ${currentPage}`,
+            `🔄 Luồng dùng: ${pageFlow.join(' → ')}`,
+            `🖥️ Thiết bị: ${device} | ${browser}`,
+            `⏰ Thời gian: ${new Date().toLocaleString('vi-VN')}`,
+        ].join('\n');
+
         fetch('/api/interactions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 subject: `[Phản hồi ${category === 'bug' ? '🐛 Lỗi' : category === 'feature' ? '💡 Ý tưởng' : '💬 Góp ý'}]`,
-                notes: feedback,
-                type: 'NOTE',
+                content: fullContent,
+                channel: 'APP',
+                tags: `feedback,${category},${userId}`,
             }),
         }).catch(() => { });
         setSent(true);
-        setTimeout(() => { setSent(false); setFeedback(''); setIsOpen(false); }, 2000);
+        setTimeout(() => { setSent(false); setFeedback(''); setUserName(''); setIsOpen(false); }, 2000);
     }
 
     return (
         <>
-            {/* Floating Button - bottom LEFT to avoid overlap with chat */}
+            {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
@@ -47,7 +103,7 @@ export default function FeedbackButton() {
             {isOpen && (
                 <div style={{
                     position: 'fixed', bottom: 72, left: 20, zIndex: 9980,
-                    width: 320, borderRadius: 16,
+                    width: 340, borderRadius: 16,
                     background: 'var(--bg-card, #1a2332)', border: '1px solid var(--border-subtle, #2a3a4a)',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
                     overflow: 'hidden',
@@ -65,7 +121,19 @@ export default function FeedbackButton() {
                             Giúp chúng tôi cải thiện Smile Home
                         </div>
                     </div>
-                    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {/* Name */}
+                        <input
+                            value={userName}
+                            onChange={e => setUserName(e.target.value)}
+                            placeholder="Tên bạn (tùy chọn)"
+                            style={{
+                                width: '100%', padding: '8px 12px', borderRadius: 8,
+                                border: '1px solid var(--border-subtle, #2a3a4a)',
+                                background: 'var(--bg-secondary, #0f1923)', color: 'var(--text-primary, #e8f0f8)',
+                                fontSize: '0.8rem', outline: 'none', fontFamily: 'inherit',
+                            }}
+                        />
                         {/* Category */}
                         <div style={{ display: 'flex', gap: 6 }}>
                             {[
@@ -90,13 +158,17 @@ export default function FeedbackButton() {
                             onChange={e => setFeedback(e.target.value)}
                             placeholder="Mô tả vấn đề hoặc ý tưởng..."
                             style={{
-                                width: '100%', minHeight: 80, padding: '10px 12px', borderRadius: 8,
+                                width: '100%', minHeight: 70, padding: '10px 12px', borderRadius: 8,
                                 border: '1px solid var(--border-subtle, #2a3a4a)',
                                 background: 'var(--bg-secondary, #0f1923)', color: 'var(--text-primary, #e8f0f8)',
                                 fontSize: '0.82rem', resize: 'vertical', outline: 'none',
                                 fontFamily: 'inherit',
                             }}
                         />
+                        {/* Page Flow Preview */}
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted, #5a8ba8)', padding: '4px 8px', background: 'var(--bg-secondary, #0f1923)', borderRadius: 6 }}>
+                            📍 Trang: {pathname} &nbsp;|&nbsp; 🔄 Luồng: {getPageFlow().slice(-5).join(' → ') || pathname}
+                        </div>
                         {/* Send */}
                         <button
                             onClick={handleSend}
