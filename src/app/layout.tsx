@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import GlobalSearch from "@/components/GlobalSearch";
 import OpenClawChat from "@/components/OpenClawChat";
 import InstallPrompt from "@/components/InstallPrompt";
+import FeedbackButton from "@/components/FeedbackButton";
 
 export const metadata: Metadata = {
   title: "Smile Home — Quản lý nhà trọ thông minh",
@@ -53,6 +54,7 @@ export default function RootLayout({
           </div>
           <OpenClawChat />
           <InstallPrompt />
+          <FeedbackButton />
         </LanguageProvider>
         <script
           dangerouslySetInnerHTML={{
