@@ -5,6 +5,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import OpenClawChat from "@/components/OpenClawChat";
 import InstallPrompt from "@/components/InstallPrompt";
 import FeedbackButton from "@/components/FeedbackButton";
+import ExtensionPrompt from "@/components/ExtensionPrompt";
 
 export const metadata: Metadata = {
   title: "Smile Home — Quản lý nhà trọ thông minh",
@@ -55,6 +56,7 @@ export default function RootLayout({
           <OpenClawChat />
           <InstallPrompt />
           <FeedbackButton />
+          <ExtensionPrompt />
         </LanguageProvider>
         <script
           dangerouslySetInnerHTML={{
