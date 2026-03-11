@@ -13,6 +13,7 @@ export default function Sidebar() {
             section: t('overview'),
             items: [
                 { href: '/', label: t('dashboard'), icon: '📊' },
+                { href: '/guide', label: '📖 Hướng dẫn', icon: '📖', badge: 'Guide' },
                 { href: '/commissions', label: t('commissions'), icon: '💸', badge: 'Sales' },
                 { href: '/hierarchy', label: t('organization'), icon: '🌲' },
                 { href: '/billing', label: t('billingAccounting'), icon: '💳' },
