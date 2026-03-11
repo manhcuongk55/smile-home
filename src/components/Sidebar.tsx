@@ -38,6 +38,7 @@ export default function Sidebar() {
                 { href: '/rent-reminders', label: t('rentReminders'), icon: '🔔' },
                 { href: '/maintenance', label: t('maintenance'), icon: '🔧' },
                 { href: '/utilities', label: t('utilities'), icon: '⚡' },
+                { href: '/feedback', label: '📬 Hộp phản hồi', icon: '📬' },
                 { href: '/ai-assistant', label: '🦞 AI Assistant', icon: '🦞', badge: 'AI' },
             ]
         },
