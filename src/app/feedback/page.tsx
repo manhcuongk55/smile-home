@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react';
 interface Feedback {
     id: string;
     subject: string;
-    notes: string;
+    content: string;
+    notes?: string;
     createdAt: string;
 }
 
@@ -88,7 +89,7 @@ export default function FeedbackPage() {
                                     </span>
                                 </div>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                                    {fb.notes}
+                                    {fb.content || fb.notes}
                                 </div>
                             </div>
                         );

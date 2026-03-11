@@ -28,28 +28,35 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     const body = await request.json();
-    const interaction = await prisma.interaction.create({
-        data: {
-            personId: body.personId,
-            roomId: body.roomId || null,
-            contractId: body.contractId || null,
-            invoiceId: body.invoiceId || null,
-            channel: body.channel || 'PHONE',
-            direction: body.direction || 'INBOUND',
-            subject: body.subject,
-            content: body.content,
-            tags: body.tags || '',
-        },
-        include: {
-            person: { select: { id: true, name: true } },
-            room: {
-                select: {
-                    id: true,
-                    number: true,
-                    building: { select: { name: true } },
+    const data: Record<string, unknown> = {
+        channel: body.channel || 'APP',
+        direction: body.direction || 'INBOUND',
+        subject: body.subject || '',
+        content: body.content || body.notes || '',
+        tags: body.tags || '',
+    };
+    // personId is optional for anonymous feedback
+    if (body.personId) data.personId = body.personId;
+    if (body.roomId) data.roomId = body.roomId;
+    if (body.contractId) data.contractId = body.contractId;
+    if (body.invoiceId) data.invoiceId = body.invoiceId;
+
+    try {
+        const interaction = await prisma.interaction.create({
+            data: data as any,
+            include: {
+                person: { select: { id: true, name: true } },
+                room: {
+                    select: {
+                        id: true,
+                        number: true,
+                        building: { select: { name: true } },
+                    },
                 },
             },
-        },
-    });
-    return NextResponse.json(interaction, { status: 201 });
+        });
+        return NextResponse.json(interaction, { status: 201 });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+    }
 }
