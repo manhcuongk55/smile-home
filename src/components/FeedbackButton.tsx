@@ -26,26 +26,27 @@ export default function FeedbackButton() {
 
     return (
         <>
-            {/* Floating Button */}
+            {/* Floating Button - bottom LEFT to avoid overlap with chat */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
-                    position: 'fixed', bottom: 20, right: 20, zIndex: 9980,
-                    width: 48, height: 48, borderRadius: '50%', border: 'none',
+                    position: 'fixed', bottom: 20, left: 20, zIndex: 9980,
+                    height: 44, borderRadius: 22, border: 'none',
                     background: 'linear-gradient(135deg, #f472b6, #fb923c)',
-                    color: '#fff', fontSize: '1.2rem', cursor: 'pointer',
+                    color: '#fff', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
                     boxShadow: '0 4px 16px rgba(244,114,182,0.4)',
                     transition: 'all 200ms ease',
-                    transform: isOpen ? 'rotate(45deg)' : 'none',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '0 16px',
                 }}
             >
-                {isOpen ? '✕' : '📝'}
+                {isOpen ? '✕ Đóng' : '📝 Phản hồi'}
             </button>
 
             {/* Feedback Panel */}
             {isOpen && (
                 <div style={{
-                    position: 'fixed', bottom: 80, right: 20, zIndex: 9980,
+                    position: 'fixed', bottom: 72, left: 20, zIndex: 9980,
                     width: 320, borderRadius: 16,
                     background: 'var(--bg-card, #1a2332)', border: '1px solid var(--border-subtle, #2a3a4a)',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
