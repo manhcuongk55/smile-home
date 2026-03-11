@@ -13,8 +13,18 @@ export default function Sidebar() {
             section: t('overview'),
             items: [
                 { href: '/', label: t('dashboard'), icon: '📊' },
+                { href: '/commissions', label: t('commissions'), icon: '💸', badge: 'Sales' },
                 { href: '/hierarchy', label: t('organization'), icon: '🌲' },
                 { href: '/billing', label: t('billingAccounting'), icon: '💳' },
+                { href: '/reports', label: t('financialReports'), icon: '📈', badge: 'New' },
+            ]
+        },
+        {
+            section: 'Hệ sinh thái SmileBed',
+            items: [
+                { href: '/properties', label: t('properties'), icon: '🏢' },
+                { href: '/rooms', label: t('roomStatus'), icon: '🏠' },
+                { href: '/sleepboxes', label: 'Sleepbox & Giường tầng', icon: '🛏️', badge: 'Hot' },
             ]
         },
         {
@@ -22,21 +32,19 @@ export default function Sidebar() {
             items: [
                 { href: '/interactions', label: t('interactions'), icon: '💬', badge: 'Hub' },
                 { href: '/leads', label: t('leadPipeline'), icon: '🎯' },
-                { href: '/rooms', label: t('roomStatus'), icon: '🏠' },
-                { href: '/properties', label: t('properties'), icon: '🏢' },
                 { href: '/contracts', label: t('contracts'), icon: '📄' },
                 { href: '/invoices', label: t('invoices'), icon: '💰' },
                 { href: '/rent-reminders', label: t('rentReminders'), icon: '🔔' },
-                { href: '/commissions', label: t('commissions'), icon: '💸' },
                 { href: '/maintenance', label: t('maintenance'), icon: '🔧' },
                 { href: '/utilities', label: t('utilities'), icon: '⚡' },
+                { href: '/ai-assistant', label: '🦞 AI Assistant', icon: '🦞', badge: 'AI' },
             ]
         },
         {
             section: t('analytics'),
             items: [
-                { href: '/reports', label: t('financialReports'), icon: '📈' },
                 { href: '/activity', label: t('activityHistory'), icon: '📜' },
+                { href: '/social-hub', label: '📲 Social Automation', icon: '📲', badge: 'New' },
                 { href: '/post-generator', label: '🚀 Tìm Khách MXH', icon: '🚀' },
             ]
         },

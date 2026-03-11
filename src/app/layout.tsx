@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import GlobalSearch from "@/components/GlobalSearch";
+import OpenClawChat from "@/components/OpenClawChat";
 
 export const metadata: Metadata = {
   title: "Xgate — Property Operation System",
@@ -26,8 +27,10 @@ export default function RootLayout({
               {children}
             </main>
           </div>
+          <OpenClawChat />
         </LanguageProvider>
       </body>
     </html>
   );
 }
+
