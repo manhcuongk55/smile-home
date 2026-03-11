@@ -26,6 +26,7 @@ export default function Sidebar() {
                 { href: '/properties', label: t('properties'), icon: '🏢' },
                 { href: '/rooms', label: t('roomStatus'), icon: '🏠' },
                 { href: '/sleepboxes', label: 'Sleepbox & Giường tầng', icon: '🛏️', badge: 'Hot' },
+                { href: '/numerology', label: '🔮 Thần số học', icon: '🔮', badge: 'New' },
             ]
         },
         {
